@@ -1,0 +1,60 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.22"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "MIA_Proyecto1_202004765",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "MIA_Proyecto1_202004765::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-MIA_Proyecto1_202004765-Debug-fc0de51f4b8f18c71657.json",
+					"name" : "MIA_Proyecto1_202004765",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/javierg/Escritorio/U/Archivos/MIA_Proyecto1_202004765/cmake-build-debug",
+		"source" : "/home/javierg/Escritorio/U/Archivos/MIA_Proyecto1_202004765"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

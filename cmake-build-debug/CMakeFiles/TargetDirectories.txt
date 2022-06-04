@@ -1,0 +1,3 @@
+/home/javierg/Escritorio/U/Archivos/MIA_Proyecto1_202004765/cmake-build-debug/CMakeFiles/MIA_Proyecto1_202004765.dir
+/home/javierg/Escritorio/U/Archivos/MIA_Proyecto1_202004765/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/javierg/Escritorio/U/Archivos/MIA_Proyecto1_202004765/cmake-build-debug/CMakeFiles/rebuild_cache.dir
