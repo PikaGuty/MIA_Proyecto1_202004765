@@ -748,6 +748,9 @@ void comando_MKFILE(char *token){
     string ncomando, anterior;
 
     while (comandos != "") { //Volviendo a desarmar la cadena para obtener los parámetros
+        /*Se puede fragmentar el comando para evaluar si los dos primeros
+        caracteres son @p y tomar la decision si hacer o no la linea de abajo o tirarlo a espacio
+         en vez de =>*/
         ncomando = comandos.substr(0, comandos.find("=>"));
         transform(ncomando.begin(), ncomando.end(), ncomando.begin(), ::tolower);
         int pos = comandos.find("=>");
