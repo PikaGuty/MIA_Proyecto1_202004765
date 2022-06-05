@@ -74,7 +74,7 @@ void analizar(){
             cout<<"******** Ejecutando MKFILE ********"<<endl;
             token = strtok(NULL, " ");
             comando_MKFILE(token);
-        }/*else if (actual=="exec"){
+        }else if (actual=="exec"){
             cout<<"******** Ejecutando EXEC ********"<<endl;
             token = strtok(NULL, " ");
             comando_EXEC(token);
@@ -82,7 +82,7 @@ void analizar(){
             cout<<"******** Ejecutando RM ********"<<endl;
             token = strtok(NULL, " ");
             comando_RM(token);
-        }else if (actual=="cp"){
+        }/*else if (actual=="cp"){
             cout<<"******** Ejecutando CP ********"<<endl;
             token = strtok(NULL, " ");
             comando_CP(token);
@@ -751,9 +751,44 @@ void comando_MKFILE(char *token){
         /*Se puede fragmentar el comando para evaluar si los dos primeros
         caracteres son @p y tomar la decision si hacer o no la linea de abajo o tirarlo a espacio
          en vez de =>*/
-        ncomando = comandos.substr(0, comandos.find("=>"));
-        transform(ncomando.begin(), ncomando.end(), ncomando.begin(), ::tolower);
-        int pos = comandos.find("=>");
+
+        char com[128];
+        bool coincide = true;
+        strcpy(com, comandos.c_str());
+        for (int i = 0; i < 3; i++) {
+
+            if (i == 0 && com[i] == '@') {
+                //cout << "SI ES @" << endl;
+            } else {
+                if (i == 0)
+                    coincide = false;
+            }
+            if (i == 1 && com[i] == 'p') {
+                //cout << "SI ES i" << endl;
+            } else {
+                if (i == 1)
+                    coincide = false;
+            }
+            if (i == 2 && com[i] == ' ') {
+                //cout << "SI ES d" << endl;
+            } else {
+                if (i == 2)
+                    coincide = false;
+            }
+        }
+
+
+        int pos=0;
+        if(coincide== false){
+            //cout<<"Evaluando "<<com<<" y es "<<coincide<<endl;
+            ncomando = comandos.substr(0, comandos.find("=>"));
+            transform(ncomando.begin(), ncomando.end(), ncomando.begin(), ::tolower);
+            pos = comandos.find("=>");
+        }else{
+            ncomando = comandos.substr(0, comandos.find(" "));
+            transform(ncomando.begin(), ncomando.end(), ncomando.begin(), ::tolower);
+            pos = comandos.find(" ");
+        }
 
         if (ncomando == "$id" && xid == false) { //Reconociendo el size y sacando su parámetro
             xid = true;//Indicando que ya se evaluó al ser de caracter obligatorio
@@ -780,9 +815,8 @@ void comando_MKFILE(char *token){
             pos = comandos.find(" ");
             comandos.erase(0, 1 + pos);
         } else if (ncomando == "@p" && xp == false) { //Reconociendo el path y sacando su parámetro
-
             xp = true;//Indicando que ya se evaluó al ser de caracter obligatorio
-            comandos.erase(0, 2 + pos);
+            comandos.erase(0, 1 + pos);
             //Verificar para tirar error
 
         } else if (ncomando == "@size" && xsize == false) { //Reconociendo el size y sacando su parámetro
@@ -825,7 +859,6 @@ void comando_MKFILE(char *token){
 
     if(xid == true && xpath==true){//Se puede ejecutar el comando
         //LLAMAR AL METODO PARA TERMINAR VERIFICACIONES Y REALIZAR LO QUE TIENE QUE HACER
-
         cout<<"Id: "<<id<<endl;
         cout<<"Path: "<<path<<endl;
         cout<<"P: "<<xp<<endl;
@@ -853,13 +886,11 @@ void comando_MKFILE(char *token){
 }
 
 void comando_EXEC(char *token){
-    bool xsize = false, xpath = false, xname = false;//Obligatorios
-    bool xunit = false, xtype = false, xfit = false, xdelete = false, xadd = false, xmov = false;//Opcionales
-    int size=0, add=0;
-    char path[512]="", name[64]="", unit[16]="", type[16]="", fit[16]="", delet[16]="", mov[64]="";
+    bool xpath = false;//Obligatorios
+    char path[512]="";
 
     if(token == NULL){//Error por si no trae ningun parametro
-        cout<<"Error: El comando \"FDISK\" debe poseer los parámetros $size, $name, $path ya que son de caracter obligatorio."<<endl;
+        cout<<"Error: El comando \"EXEC\" debe poseer los parámetros $size, $name, $path ya que son de caracter obligatorio."<<endl;
     }
 
     string comandos = "";
@@ -879,17 +910,7 @@ void comando_EXEC(char *token){
         transform(ncomando.begin(), ncomando.end(), ncomando.begin(), ::tolower);
         int pos = comandos.find("=>");
 
-        if (ncomando == "$size" && xsize == false) { //Reconociendo el size y sacando su parámetro
-            xsize = true;//Indicando que ya se evaluó al ser de caracter obligatorio
-            comandos.erase(0, 2 + pos);
-
-            //TODO Preguntar si en verdad es obligatorio ya que no se usa en varios ejemplo y si se coloca estaria de mas
-            //PASANDO A LA VARIABLE SIZE EL DATO
-            size = stoi(comandos.substr(0, comandos.find(" ")));
-
-            pos = comandos.find(" ");
-            comandos.erase(0, 1 + pos);
-        } else if (ncomando == "$path" && xpath == false) { //Reconociendo el path y sacando su parámetro
+        if (ncomando == "$path" && xpath == false) { //Reconociendo el path y sacando su parámetro
             xpath = true;//Indicando que ya se evaluó al ser de caracter obligatorio
             comandos.erase(0, 2 + pos);
 
@@ -904,72 +925,9 @@ void comando_EXEC(char *token){
 
             pos = comandos.find(" ");
             comandos.erase(0, 1 + pos);
-        } else if (ncomando == "$name" && xname == false) { //Reconociendo el name y sacando su parámetro
-            xname = true;//Indicando que ya se evaluó al ser de caracter obligatorio
-            comandos.erase(0, 2 + pos);
-
-            //PASANDO A LA VARIABLE NAME EL DATO
-            strcpy(name,comandos.substr(0, comandos.find(" ")).c_str());
-
-            pos = comandos.find(" ");
-            comandos.erase(0, 1 + pos);
-        } else if (ncomando == "@unit" && xunit == false) { //Reconociendo el unit y sacando su parámetro
-            xunit = true;//Indicando que ya se evaluó
-            comandos.erase(0, 2 + pos);
-
-            //PASANDO A LA VARIABLE UNIT EL DATO
-            strcpy(unit,comandos.substr(0, comandos.find(" ")).c_str());
-
-            pos = comandos.find(" ");
-            comandos.erase(0, 1 + pos);
-        }else if (ncomando == "@type" && xtype == false) { //Reconociendo el type y sacando su parámetro
-            xtype = true;//Indicando que ya se evaluó
-            comandos.erase(0, 2 + pos);
-
-            //PASANDO A LA VARIABLE TYPE EL DATO
-            strcpy(type,comandos.substr(0, comandos.find(" ")).c_str());
-
-            pos = comandos.find(" ");
-            comandos.erase(0, 1 + pos);
-        }else if (ncomando == "@fit" && xfit == false) { //Reconociendo el fit y sacando su parámetro
-            xfit = true;//Indicando que ya se evaluó
-            comandos.erase(0, 2 + pos);
-
-            //PASANDO A LA VARIABLE FIT EL DATO
-            strcpy(fit,comandos.substr(0, comandos.find(" ")).c_str());
-
-            pos = comandos.find(" ");
-            comandos.erase(0, 1 + pos);
-        }else if (ncomando == "@delete" && xdelete == false) { //Reconociendo el delete y sacando su parámetro
-            xdelete = true;//Indicando que ya se evaluó
-            comandos.erase(0, 2 + pos);
-
-            //PASANDO A LA VARIABLE DELETE EL DATO
-            strcpy(delet,comandos.substr(0, comandos.find(" ")).c_str());
-
-            pos = comandos.find(" ");
-            comandos.erase(0, 1 + pos);
-        }else if (ncomando == "@add" && xadd == false) { //Reconociendo el add y sacando su parámetro
-            xadd = true;//Indicando que ya se evaluó
-            comandos.erase(0, 2 + pos);
-
-            //PASANDO A LA VARIABLE DELETE EL DATO
-            add = stoi(comandos.substr(0, comandos.find(" ")));
-
-            pos = comandos.find(" ");
-            comandos.erase(0, 1 + pos);
-        }else if (ncomando == "@mov" && xmov == false) { //Reconociendo el mov y sacando su parámetro
-            xmov = true;//Indicando que ya se evaluó
-            comandos.erase(0, 2 + pos);
-
-            //PASANDO A LA VARIABLE DELETE EL DATO
-            strcpy(mov,comandos.substr(0, comandos.find(" ")).c_str());
-
-            pos = comandos.find(" ");
-            comandos.erase(0, 1 + pos);
         }else{
             if (comandos!=anterior){
-                cout<<"Error: "<<ncomando<<" no es un parámetro del comando \"FDISK\""<<endl;
+                cout<<"Error: "<<ncomando<<" no es un parámetro del comando \"EXEC\""<<endl;
             }
         }
 
@@ -981,29 +939,92 @@ void comando_EXEC(char *token){
     }
 
 
-    if(xsize == true && xname == true && xpath==true){//Se puede ejecutar el comando
+    if(xpath==true){//Se puede ejecutar el comando
         //LLAMAR AL METODO PARA TERMINAR VERIFICACIONES Y REALIZAR LO QUE TIENE QUE HACER
 
-        cout<<"Size: "<<size<<endl;
-        cout<<"Unit: "<<unit<<endl;
         cout<<"Path: "<<path<<endl;
-        cout<<"Type: "<<type<<endl;
-        cout<<"Fit: "<<fit<<endl;
-        cout<<"Delete: "<<delet<<endl;
-        cout<<"Name: "<<name<<endl;
-        cout<<"Add: "<<add<<endl;
-        cout<<"Mov: "<<mov<<endl;
-        //TODO FDISK
+       //TODO EXEC
     }else{ //Notificando errores si no se ingresaron los parametros obligatorios al comando
-        cout<<"Error: El comando \"FDISK\" debe poseer el/los parámetros ";
-        if(xsize == false){
-            cout<<"$size";
-            if(xname == false || xpath == false){
-                cout<<", ";
-            }else{
-                cout<<" ";
+        cout<<"Error: El comando \"EXEC\" debe poseer el parámetro ";
+
+        if(xpath == false){
+            cout<<"$path ";
+        }
+
+        cout<<"ya que son de caracter obligatorio."<<endl;
+    }
+}
+
+void comando_RM(char *token){
+    bool xpath = false, xname = false;
+    char path[512], name[64];
+
+    if(token == NULL){//Error por si no trae ningun parametro
+        //TODO comando sin parametros muestra en consola las particiones montadas
+    }
+
+    string comandos = "";
+    comandos+=token;
+    while (token != NULL) { //Convirtiendo los tokens recibidos en una sola cadena
+        token = strtok(NULL, " ");
+        if (token != NULL){
+            comandos+=" ";
+            comandos+=token;
+        }
+    }
+
+    string ncomando, anterior;
+
+    while (comandos != "") { //Volviendo a desarmar la cadena para obtener los parámetros
+        ncomando = comandos.substr(0, comandos.find("=>"));
+        transform(ncomando.begin(), ncomando.end(), ncomando.begin(), ::tolower);
+        int pos = comandos.find("=>");
+
+        if (ncomando == "$path" && xpath == false) {
+            xpath = true;//Indicando que ya se evaluó al ser de caracter obligatorio
+            comandos.erase(0, 2 + pos);
+
+            pos = comandos.find("\"");
+            comandos.erase(0, 1 + pos);
+
+            //PASANDO A LA VARIABLE PATH EL DATO
+            strcpy(path, comandos.substr(0, comandos.find("\"")).c_str());
+
+            pos = comandos.find("\"");
+            comandos.erase(0, 1 + pos);
+
+            pos = comandos.find(" ");
+            comandos.erase(0, 1 + pos);
+        } else if (ncomando == "$name" && xname == false) {
+            xname = true;//Indicando que ya se evaluó al ser de caracter obligatorio
+            comandos.erase(0, 2 + pos);
+
+            //PASANDO A LA VARIABLE NAME EL DATO
+            strcpy(name,comandos.substr(0, comandos.find(" ")).c_str());
+
+            pos = comandos.find(" ");
+            comandos.erase(0, 1 + pos);
+        }else{
+            if (comandos!=anterior){
+                cout<<"Error: "<<ncomando<<" no es un parámetro del comando \"MOUNT\""<<endl;
             }
         }
+
+        if (comandos==anterior){ //Verificando si ya se llegó al final (no cambia por que no encuentra espacio)
+            comandos="";
+        }else{
+            anterior=comandos;
+        }
+    }
+
+
+    if(xname == true && xpath==true){//Se puede ejecutar el comando
+        //LLAMAR AL METODO PARA TERMINAR VERIFICACIONES Y REALIZAR LO QUE TIENE QUE HACER
+        cout<<"Name: "<<name<<endl;
+        cout<<"Path: "<<path<<endl;
+        //TODO MOUNT
+    }else{ //Notificando errores si no se ingresaron los parametros obligatorios al comando
+        cout<<"Error: El comando \"MOUNT\" debe poseer el/los parámetros ";
         if(xname == false){
             cout<<"$name";
             if(xpath == false){
@@ -1019,4 +1040,5 @@ void comando_EXEC(char *token){
         cout<<"ya que son de caracter obligatorio."<<endl;
     }
 }
+
 
