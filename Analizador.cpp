@@ -7,7 +7,8 @@
 #include <string.h>
 #include <string>
 
-#include "cMkdisk.h"
+#include "cMkdisk.h"//Aqui esta tambien el RMDISK
+#include "CFdisk.h"
 
 #include <algorithm>
 
@@ -197,8 +198,9 @@ void comando_MKDISK(char *token){
         cout<<"Size: "<<size<<endl;
         cout<<"Name: "<<name<<endl;
         cout<<"Path: "<<path<<endl;
+        cout<<endl;
         cMkdisk(size,name,path);
-        //TODO MKDISK
+
     }else{ //Notificando errores si no se ingresaron los parametros obligatorios al comando
         cout<<"Error: El comando \"MKDISK\" debe poseer el/los parámetros ";
         if(xsize == false){
@@ -282,7 +284,8 @@ void comando_RMDISK(char *token){
     if(xpath==true){//Se puede ejecutar el comando
         //LLAMAR AL METODO PARA TERMINAR VERIFICACIONES Y REALIZAR LO QUE TIENE QUE HACER
         cout<<"Path: "<<path<<endl;
-        //TODO RMDISK
+        cout<<endl;
+        execRMDISK(path);
     }else{ //Notificando errores si no se ingresaron los parametros obligatorios al comando
         cout<<"Error: El comando \"RMDISK\" debe poseer el parámetro ";
 
@@ -435,6 +438,8 @@ void comando_FDISK(char *token){
         cout<<"Name: "<<name<<endl;
         cout<<"Add: "<<add<<endl;
         cout<<"Mov: "<<mov<<endl;
+        cout<<endl;
+        cFdisk(size,unit,path,type,fit,delet,name,add,mov);
         //TODO FDISK
     }else{ //Notificando errores si no se ingresaron los parametros obligatorios al comando
         cout<<"Error: El comando \"FDISK\" debe poseer el/los parámetros ";

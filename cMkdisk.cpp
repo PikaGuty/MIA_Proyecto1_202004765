@@ -9,24 +9,14 @@
 #include <cstdlib>
 #include <math.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "estructuras.h"
 
 using namespace std;
 
 void execMKDISK(char rut[512], int tamano, char principal);
-
-string getDirectorio(char direccion[512]){
-    string aux = direccion;
-    string delimiter = "/";
-    size_t pos = 0;
-    string res = "";
-    while((pos = aux.find(delimiter))!=string::npos){
-        res += aux.substr(0,pos)+"/";
-        aux.erase(0,pos + delimiter.length());
-    }
-    return res;
-}
+string getDirectorio(char direccion[512]);
 
 void cMkdisk(int size, char name[64], char path[512]){
 
@@ -56,7 +46,9 @@ void cMkdisk(int size, char name[64], char path[512]){
     }
     int pos = name_p.find(".");
     name_p.erase(0, 1 + pos);
-    transform(ncomando.begin(), ncomando.end(), ncomando.begin(), ::tolower);
+
+    transform(name_p.begin(), name_p.end(), name_p.begin(), ::tolower);
+
     if(name_p!="dsk"){
         cout<<"Error: El nombre debe contener la extensión \".dsk\" al final"<<endl;
         return;
@@ -68,7 +60,8 @@ void cMkdisk(int size, char name[64], char path[512]){
 
     char rut[512]="";
     strcpy(rut,path);
-    strcat(rut,name);
+    strcat(rut,ncomando.c_str());
+    strcat(rut,".dsk");
     execMKDISK(rut,size, '1');
 
     char rut2[512]="";
@@ -149,6 +142,57 @@ void execMKDISK(char rut[512], int tamano, char principal){
         fclose(f);
 
         if(principal=='1')
-            puts("\t...................El disco fue creado..............");
+            puts("\t...................El disco fue creado................");
     }
+}
+
+string getDirectorio(char direccion[512]){
+    string aux = direccion;
+    string delimiter = "/";
+    size_t pos = 0;
+    string res = "";
+    while((pos = aux.find(delimiter))!=string::npos){
+        res += aux.substr(0,pos)+"/";
+        aux.erase(0,pos + delimiter.length());
+    }
+    return res;
+}
+
+string getNDisco(char direccion[512]){
+    string aux = direccion;
+    string delimiter = "/";
+    size_t pos = 0;
+    while((pos = aux.find(delimiter))!=string::npos){
+        aux.erase(0,pos + delimiter.length());
+    }
+    return aux;
+}
+
+void execRMDISK(char ruta[512]) {
+    char confirmacion;
+    string disco= getNDisco(ruta);
+
+    do {
+        cout<<"Desea eliminar el disco \""<<disco<<"\" [S/N]"<<endl;
+        cin>>confirmacion;
+        int i;
+        switch (confirmacion) {
+            case 's':
+            case 'S':
+                i = unlink(ruta);
+                if (i == 0) {
+                    cout<<"\t..................El disco fue eliminado................"<<endl;
+                } else {
+                    cout<<"\t................El disco no fue eliminado................"<<endl;
+                }
+                break;
+            case 'n':
+            case 'N':
+                cout<<"\t................El disco no fue eliminado................"<<endl;
+                break;
+            default:
+                break;
+        }
+    } while (confirmacion!='S'&&confirmacion!='N'&&confirmacion!='s'&&confirmacion!='n');
+
 }
