@@ -4,7 +4,7 @@
 
 #ifndef MIA_PROYECTO1_202004765_ANALIZADOR_H
 #define MIA_PROYECTO1_202004765_ANALIZADOR_H
-
+#include "cMkdisk.h"
 
 void analizar();
 

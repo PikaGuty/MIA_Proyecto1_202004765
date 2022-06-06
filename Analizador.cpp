@@ -7,7 +7,7 @@
 #include <string.h>
 #include <string>
 
-
+#include "cMkdisk.h"
 
 #include <algorithm>
 
@@ -47,7 +47,7 @@ void analizar(){
         transform(actual.begin(), actual.end(), actual.begin(), ::tolower);
 
         if (actual=="mkdisk"){
-            cout<<"******** Ejecutando MKDISK ********"<<endl;
+            cout<<"************************ Ejecutando MKDISK ************************"<<endl;
             token = strtok(NULL, " ");
             comando_MKDISK(token);
         }else if (actual=="rmdisk"){
@@ -144,7 +144,13 @@ void comando_MKDISK(char *token){
             comandos.erase(0, 2 + pos);
 
             //PASANDO A LA VARIABLE SIZE EL DATO
-            size = stoi(comandos.substr(0, comandos.find(" ")));
+            try {
+                size = stoi(comandos.substr(0, comandos.find(" ")));
+            } catch (...) {
+                cout<<"Error: El parámetro \"$size\" solo recibe numeros"<<endl;
+                return;
+            }
+
 
             pos = comandos.find(" ");
             comandos.erase(0, 1 + pos);
@@ -191,6 +197,7 @@ void comando_MKDISK(char *token){
         cout<<"Size: "<<size<<endl;
         cout<<"Name: "<<name<<endl;
         cout<<"Path: "<<path<<endl;
+        cMkdisk(size,name,path);
         //TODO MKDISK
     }else{ //Notificando errores si no se ingresaron los parametros obligatorios al comando
         cout<<"Error: El comando \"MKDISK\" debe poseer el/los parámetros ";
