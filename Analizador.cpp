@@ -330,7 +330,12 @@ void comando_FDISK(char *token){
 
             //TODO Preguntar si en verdad es obligatorio ya que no se usa en varios ejemplo y si se coloca estaria de mas
             //PASANDO A LA VARIABLE SIZE EL DATO
-            size = stoi(comandos.substr(0, comandos.find(" ")));
+            try {
+                size = stoi(comandos.substr(0, comandos.find(" ")));
+            } catch (...) {
+                cout<<"Error: El parámetro \"$size\" solo recibe numeros"<<endl;
+                return;
+            }
 
             pos = comandos.find(" ");
             comandos.erase(0, 1 + pos);
@@ -398,8 +403,13 @@ void comando_FDISK(char *token){
             xadd = true;//Indicando que ya se evaluó
             comandos.erase(0, 2 + pos);
 
-            //PASANDO A LA VARIABLE DELETE EL DATO
-            add = stoi(comandos.substr(0, comandos.find(" ")));
+            //PASANDO A LA VARIABLE ADD EL DATO
+            try {
+                add = stoi(comandos.substr(0, comandos.find(" ")));
+            } catch (...) {
+                cout<<"Error: El parámetro \"@add\" solo recibe numeros"<<endl;
+                return;
+            }
 
             pos = comandos.find(" ");
             comandos.erase(0, 1 + pos);
@@ -426,10 +436,10 @@ void comando_FDISK(char *token){
     }
 
 
-    if(xsize == true && xname == true && xpath==true){//Se puede ejecutar el comando
+    if(xname == true && xpath==true){//Se puede ejecutar el comando
         //LLAMAR AL METODO PARA TERMINAR VERIFICACIONES Y REALIZAR LO QUE TIENE QUE HACER
 
-        cout<<"Size: "<<size<<endl;
+        /*cout<<"Size: "<<size<<endl;
         cout<<"Unit: "<<unit<<endl;
         cout<<"Path: "<<path<<endl;
         cout<<"Type: "<<type<<endl;
@@ -438,8 +448,21 @@ void comando_FDISK(char *token){
         cout<<"Name: "<<name<<endl;
         cout<<"Add: "<<add<<endl;
         cout<<"Mov: "<<mov<<endl;
-        cout<<endl;
-        cFdisk(size,unit,path,type,fit,delet,name,add,mov);
+        cout<<endl;*/
+
+        if(xdelete == true){
+            //cout<<"Vamo a eliminar"<<endl;
+            cFdisk_eliminar(path, delet, name);
+        } else if (xadd == true){
+            //cout<<"Vamo a añadir"<<endl;
+            cFdisk_add(unit, path, name, add);
+        } else if (xmov == true){
+            //cout<<"Vamo a mover"<<endl;
+            cFdisk_mover(path, name, mov);
+        }else{
+            //cout<<"Vamo a crear"<<endl;
+            cFdisk_crear(size, unit, path, type, fit, name);
+        }
         //TODO FDISK
     }else{ //Notificando errores si no se ingresaron los parametros obligatorios al comando
         cout<<"Error: El comando \"FDISK\" debe poseer el/los parámetros ";

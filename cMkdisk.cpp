@@ -98,20 +98,20 @@ void execMKDISK(char rut[512], int tamano, char principal){
         p.mbr_tamano=size;
         p.mbr_dsk_signature=(rand()%99);
 
-        strcpy(p.mbr_partition_1.part_status,"desactive");
-        strcpy(p.mbr_partition_2.part_status,"desactive");
-        strcpy(p.mbr_partition_3.part_status,"desactive");
-        strcpy(p.mbr_partition_4.part_status,"desactive");
+        p.mbr_partition_1.part_status='0';
+        p.mbr_partition_2.part_status='0';
+        p.mbr_partition_3.part_status='0';
+        p.mbr_partition_4.part_status='0';
 
-        strcpy(p.mbr_partition_1.part_type,"");
-        strcpy(p.mbr_partition_2.part_type,"");
-        strcpy(p.mbr_partition_3.part_type,"");
-        strcpy(p.mbr_partition_4.part_type,"");
+        p.mbr_partition_1.part_type='\0';
+        p.mbr_partition_2.part_type='\0';
+        p.mbr_partition_3.part_type='\0';
+        p.mbr_partition_4.part_type='\0';
 
-        strcpy(p.mbr_partition_1.part_fit,"");
-        strcpy(p.mbr_partition_2.part_fit,"");
-        strcpy(p.mbr_partition_3.part_fit,"");
-        strcpy(p.mbr_partition_4.part_fit,"");
+        p.mbr_partition_1.part_fit='\0';
+        p.mbr_partition_2.part_fit='\0';
+        p.mbr_partition_3.part_fit='\0';
+        p.mbr_partition_4.part_fit='\0';
 
         p.mbr_partition_1.part_start = 0;
         p.mbr_partition_2.part_start = 0;
@@ -142,7 +142,7 @@ void execMKDISK(char rut[512], int tamano, char principal){
         fclose(f);
 
         if(principal=='1')
-            puts("\t...................El disco fue creado................");
+            cout<<"\t...................El disco fue creado................"<<endl;
     }
 }
 

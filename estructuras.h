@@ -10,22 +10,22 @@
 #include <time.h>
 
 typedef struct{
-    char part_status[16];
-    char part_type[2];
-    char part_fit[2];
+    char part_status;
+    char part_type;
+    char part_fit;
     int part_start;
     int part_size;
-    char part_name[32];
-} partition;
+    char part_name[16];
+} partitiond;
 
 typedef struct{
     int mbr_tamano;
     time_t mbr_fecha_creacion;
     int mbr_dsk_signature;
-    partition mbr_partition_1;
-    partition mbr_partition_2;
-    partition mbr_partition_3;
-    partition mbr_partition_4;
+    partitiond mbr_partition_1;
+    partitiond mbr_partition_2;
+    partitiond mbr_partition_3;
+    partitiond mbr_partition_4;
 } mbr;
 
 #endif //MIA_PROYECTO1_202004765_ESTRUCTURAS_H
