@@ -29,7 +29,6 @@ void cFdisk_crear(int size, char unit[16], char path[512], char type[16], char f
         if(datos.part_type!='L'){
             execFdisk_crearPyE(datos,path);//Creando particiones Primarias y Extendidas
         }else{
-            //TODO particion logica
             execFdisk_crearL(datos,path);//Creando particiones logicas
         }
 
