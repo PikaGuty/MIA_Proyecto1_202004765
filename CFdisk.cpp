@@ -16,6 +16,7 @@ using namespace std;
 
 void execFdisk_crearPyE(datos_crearFDISK datos, char path[512]);
 void execFdisk_crearL(datos_crearFDISK datos, char path[512]);
+void Fdisk_crearL(datos_crearFDISK datos, char path[512]);
 datos_crearFDISK valFdisk_crear(int size, char unit[16], char path[512], char type[16], char fit[16], char name[64], datos_crearFDISK datos);
 
 
@@ -25,7 +26,7 @@ void cFdisk_crear(int size, char unit[16], char path[512], char type[16], char f
     datos = valFdisk_crear(size, unit,path,type,fit,name,datos);
 
     if(datos.correcto==true){
-        if(datos.part_type!='l'){
+        if(datos.part_type!='L'){
             execFdisk_crearPyE(datos,path);//Creando particiones Primarias y Extendidas
         }else{
             //TODO particion logica
@@ -389,7 +390,182 @@ void execFdisk_crearPyE(datos_crearFDISK datos, char path[512]){
 }
 
 void execFdisk_crearL(datos_crearFDISK datos, char path[512]){
-    cout<<"ES UNA LOGICA"<<endl;
+    mbr retorno = leerMBR(path);
+
+    partitiond particiones[4];
+    particiones[0] = retorno.mbr_partition_1;
+    particiones[1] = retorno.mbr_partition_2;
+    particiones[2] = retorno.mbr_partition_3;
+    particiones[3] = retorno.mbr_partition_4;
+
+    string tipo="";
+    bool hayExt = false;
+    int i;
+    for (i = 0; i < 4; i++) {
+        tipo="";
+        tipo=particiones[i].part_type;
+        if(tipo=="E"){
+            hayExt = true;
+            break;
+        }
+    }
+
+    int inicio = 0;
+    int tamano = 0;
+    int tamanoDiponible = 0;
+
+    if(hayExt==true) {
+        cout<<"La partición extendida es la "<<i<<"del disco "<<endl;
+        inicio = particiones[i].part_start;
+        tamano = particiones[i].part_size;
+        tamanoDiponible = inicio + tamano; //No es el espacio disponible en si, si no el ultimo byte de la partición extendida
+
+        string auxf = path;
+        size_t pos = 0;
+        string res = "";
+        while((pos = auxf.find("/"))!=string::npos){
+            res += auxf.substr(0,pos)+"/";
+            auxf.erase(0,pos + 1);
+        }
+
+        string nombre = "";
+        pos = auxf.find(".");
+        nombre += auxf.substr(0,pos);
+        auxf.erase(0,pos + 1);
+
+        char ruta2[512]="";
+        strcpy(ruta2,res.c_str());
+        strcat(ruta2,nombre.c_str());
+        strcat(ruta2,"_rd.dsk");
+
+        FILE *f;
+        if ((f = fopen(path, "r+b")) == NULL) {
+            if ((f = fopen(ruta2, "r+b")) == NULL) {
+                cout<<"Error: no se ha podido al abrir el disco!\n";
+            }else{
+                ebr B_ebr;
+                cout<<"Inicio: "<<inicio<<endl;
+                cout<<"Tamaño extendida "<<tamano<<endl;
+
+                fseek(f, inicio, SEEK_SET);
+                fread(&B_ebr, sizeof (ebr), 1, f);
+                if (B_ebr.part_fit == 'B' || B_ebr.part_fit == 'F' || B_ebr.part_fit == 'W') {
+                    ebr anterior;
+                    anterior = B_ebr;
+                    int siguiente = B_ebr.part_next;
+                    ebr aux;
+
+                    while (true){
+                        fseek(f, siguiente, SEEK_SET);
+                        fread(&aux, sizeof (ebr), 1, f);
+
+                        if (aux.part_fit == 'B' || aux.part_fit == 'F' || aux.part_fit == 'W') { //Hay siguiente
+                            siguiente = aux.part_next;
+                            anterior = aux;
+                        } else { //Es el ultimo
+                            //Agregando la direccion al bloque anterior
+                            aux.part_start = anterior.part_start + sizeof (ebr) + anterior.part_size + 1;
+                            fseek(f, aux.part_start, SEEK_SET);
+                            aux.part_status = '0';
+                            aux.part_fit = datos.part_fit;
+
+                            aux.part_size = datos.part_size;
+                            aux.part_next = -1; //NO hay siguiente
+
+                            strcpy(aux.part_name, datos.part_name);
+                            anterior.part_next = aux.part_start;
+
+                            if (aux.part_start + aux.part_size > tamanoDiponible) {
+                                cout<<"Error: el tamaño supera el espacio disponible en la partición extendida!\n";
+                                fclose(f);
+                                return;
+                            } else {
+                                fwrite(&aux, sizeof (ebr), 1, f);
+                                fseek(f, anterior.part_start, SEEK_SET);
+                                fwrite(&anterior, sizeof (ebr), 1, f);
+                                cout<<"Se creo la partición logica"<<endl;
+                            }
+                            break;
+                        }
+                    }
+                }else {
+                    fseek(f, inicio, SEEK_SET);//Creando el EBR
+                    B_ebr.part_status = '0';
+                    B_ebr.part_fit = datos.part_fit;
+                    B_ebr.part_start = inicio;
+                    B_ebr.part_size = datos.part_size;
+                    B_ebr.part_next = -1;
+                    strcpy(B_ebr.part_name, datos.part_name);
+                    fwrite(&B_ebr, sizeof (B_ebr), 1, f);
+                    cout<<"Se creó el primer EBR"<<endl;
+                }
+                fclose(f);
+            }
+        }else{
+            ebr B_ebr;
+            cout<<"Inicio: "<<inicio<<endl;
+            cout<<"Tamaño extendida "<<tamano<<endl;
+
+            fseek(f, inicio, SEEK_SET);
+            fread(&B_ebr, sizeof (ebr), 1, f);
+            if (B_ebr.part_fit == 'B' || B_ebr.part_fit == 'F' || B_ebr.part_fit == 'W') {
+                ebr anterior;
+                anterior = B_ebr;
+                int siguiente = B_ebr.part_next;
+                ebr aux;
+
+                while (true){
+                    fseek(f, siguiente, SEEK_SET);
+                    fread(&aux, sizeof (ebr), 1, f);
+
+                    if (aux.part_fit == 'B' || aux.part_fit == 'F' || aux.part_fit == 'W') { //Hay siguiente
+                        siguiente = aux.part_next;
+                        anterior = aux;
+                    } else { //Es el ultimo
+                        //Agregando la direccion al bloque anterior
+                        aux.part_start = anterior.part_start + sizeof (ebr) + anterior.part_size + 1;
+                        fseek(f, aux.part_start, SEEK_SET);
+                        aux.part_status = '0';
+                        aux.part_fit = datos.part_fit;
+
+                        aux.part_size = datos.part_size;
+                        aux.part_next = -1; //NO hay siguiente
+
+                        strcpy(aux.part_name, datos.part_name);
+                        anterior.part_next = aux.part_start;
+
+                        if (aux.part_start + aux.part_size > tamanoDiponible) {
+                            cout<<"Error: el tamaño supera el espacio disponible en la partición extendida!\n";
+                            fclose(f);
+                            return;
+
+                        } else {
+                            fwrite(&aux, sizeof (ebr), 1, f);
+                            fseek(f, anterior.part_start, SEEK_SET);
+                            fwrite(&anterior, sizeof (ebr), 1, f);
+                            cout<<"Se creo la partición logica"<<endl;
+                        }
+                        break;
+                    }
+                }
+            }else {
+                fseek(f, inicio, SEEK_SET);//Creando el EBR
+                B_ebr.part_status = '0';
+                B_ebr.part_fit = datos.part_fit;
+                B_ebr.part_start = inicio;
+                B_ebr.part_size = datos.part_size;
+                B_ebr.part_next = -1;
+                strcpy(B_ebr.part_name, datos.part_name);
+                fwrite(&B_ebr, sizeof (B_ebr), 1, f);
+                cout<<"Se creó el primer EBR"<<endl;
+            }
+            fclose(f);
+        }
+    }else{
+        cout<<"Error: No se encontró ninguna partición extendida en el disco"<<endl;
+        return;
+    }
+
 }
 
 void cFdisk_eliminar(char path[512], char delet[16], char name[64]){
