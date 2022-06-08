@@ -568,8 +568,97 @@ void execFdisk_crearL(datos_crearFDISK datos, char path[512]){
 
 }
 
-void cFdisk_eliminar(char path[512], char delet[16], char name[64]){
+void cFdisk_eliminar(char path[512], char delet[16], char name[64]) {
+    mbr B_mbr = leerMBR(path);
+    partitiond particiones[4];
+    particiones[0] = B_mbr.mbr_partition_1;
+    particiones[1] = B_mbr.mbr_partition_2;
+    particiones[2] = B_mbr.mbr_partition_3;
+    particiones[3] = B_mbr.mbr_partition_4;
 
+    int i;
+    char nombre[16];
+    char nombre2[16];
+
+    bool encontrado = false;
+    for (i = 0; i < 4; i++) {
+        strcpy(nombre, particiones[i].part_name);
+        strcpy(nombre2, name);
+
+        if (strncmp(nombre2, nombre, 16) == 0) {
+            encontrado = true;
+            break;
+        }
+    }
+
+    if (encontrado == true) {
+        cout << "Eliminando la Particion " << i + 1 << ", Nombre: " << particiones[i].part_name << endl;
+
+        if (strncmp("fast", delet, sizeof("fast")) == 0) {
+            cout << "Tipo = fast, size " << particiones[i].part_size << endl;
+
+            if(particiones[i].part_type=='E'){
+                FILE *f;
+                if ((f = fopen(path, "r+b")) == NULL) {
+                    cout << "Error: no se ha podido al abrir el disco!\n";
+                } else {
+                    fseek(f, particiones[i].part_start, SEEK_SET);
+                    //llenando los espacios en blanco
+                    char vacio = '\0';
+                    int i = 0;
+                    for (i = 0; i < particiones[i].part_size; i++) {
+                        fwrite(&vacio, 1, 1, f);
+                    }
+                    fclose(f);
+                }
+            }
+
+            particiones[i].part_size = 0;
+            particiones[i].part_start = 0;
+            particiones[i].part_fit = '\0';
+            strcpy(particiones[i].part_name, "");
+            particiones[i].part_status = '0';
+            particiones[i].part_type = '\0';
+
+        } else {
+            cout << "Tipo =full, size " << particiones[i].part_size << endl;
+
+            FILE *f;
+            if ((f = fopen(path, "r+b")) == NULL) {
+                cout << "Error: no se ha podido al abrir el disco!\n";
+            } else {
+                fseek(f, particiones[i].part_start, SEEK_SET);
+                //llenando los espacios en blanco
+                char vacio = '\0';
+                int i = 0;
+                for (i = 0; i < particiones[i].part_size; i++) {
+                    fwrite(&vacio, 1, 1, f);
+                }
+                fclose(f);
+            }
+
+            particiones[i].part_size = 0;
+            particiones[i].part_start = 0;
+            particiones[i].part_fit = '\0';
+            strcpy(particiones[i].part_name, "");
+            particiones[i].part_status = '0';
+            particiones[i].part_type = '\0';
+
+        }
+
+        if (i == 0) {
+            B_mbr.mbr_partition_1 = particiones[i];
+        } else if (i == 1){
+            B_mbr.mbr_partition_2 = particiones[i];
+        } else if (i == 2){
+            B_mbr.mbr_partition_3 = particiones[i];
+        }else if (i == 3) {
+            B_mbr.mbr_partition_4 = particiones[i];
+        }
+        actualizarMBR(B_mbr, path);
+    }else{
+        cout << "Error: no se encontró la partición: "<<name<<endl;
+    }
 }
 
 void cFdisk_add(char unit[16], char path[512], char name[64], int add) {

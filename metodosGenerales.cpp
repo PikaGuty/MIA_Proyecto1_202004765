@@ -92,7 +92,7 @@ void actualizarMBR(mbr nuevo, char ruta[512]) {
     }
 
     if(principal==true||secundario==true){
-        cout<<"\t...................Se ha creado la partición................"<<endl;
+        cout<<"\t...................Se ha actualizado la partición................"<<endl;
     }else{
         cout<<"Error: no se ha podido al abrir el disco!\n";
     }
