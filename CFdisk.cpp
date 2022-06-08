@@ -10,22 +10,26 @@
 
 #include "estructuras.h"
 #include "StructsDatos.h"
+#include "metodosGenerales.h"
 
 using namespace std;
 
-void execFdisk_crear(datos_crearFDISK datos, char path[512]);
+void execFdisk_crearPyE(datos_crearFDISK datos, char path[512]);
+void execFdisk_crearL(datos_crearFDISK datos, char path[512]);
 datos_crearFDISK valFdisk_crear(int size, char unit[16], char path[512], char type[16], char fit[16], char name[64], datos_crearFDISK datos);
-mbr leerMBR(char path[512]);
+
 
 void cFdisk_crear(int size, char unit[16], char path[512], char type[16], char fit[16], char name[64]) {
     datos_crearFDISK datos;
+    //Validar datos recibidos
     datos = valFdisk_crear(size, unit,path,type,fit,name,datos);
 
     if(datos.correcto==true){
         if(datos.part_type!='l'){
-            execFdisk_crear(datos,path);
+            execFdisk_crearPyE(datos,path);//Creando particiones Primarias y Extendidas
         }else{
             //TODO particion logica
+            execFdisk_crearL(datos,path);//Creando particiones logicas
         }
 
     }
@@ -130,12 +134,7 @@ datos_crearFDISK valFdisk_crear(int size, char unit[16], char path[512], char ty
     return datos;
 }
 
-void execFdisk_crear(datos_crearFDISK datos, char path[512]){
-    cout<<"Type: "<<datos.part_type<<endl;
-    cout<<"Fit: "<<datos.part_fit<<endl;
-    cout<<"Start: "<<datos.part_start<<endl;
-    cout<<"Size: "<<datos.part_size<<endl;
-    cout<<"Name: "<<datos.part_name<<endl;
+void execFdisk_crearPyE(datos_crearFDISK datos, char path[512]){
 
     mbr retorno = leerMBR(path);
 
@@ -151,6 +150,31 @@ void execFdisk_crear(datos_crearFDISK datos, char path[512]){
     for (int i = 0; i < 4; i++) {
         if(particiones[i].part_size!=0){
             prtActiva[i]=1;
+        }
+    }
+
+    string nombre = "";
+    string nombre2 = "";
+    for (int i = 0; i < 4; i++) {
+        nombre=particiones[i].part_name;
+        nombre2=datos.part_name;
+        if(nombre==nombre2){
+            cout<<"Error: El nombre "<<datos.part_name<<" ya está ocupado. "<<endl;
+            return;
+        }
+    }
+
+    string tipo="";
+    tipo=datos.part_type;
+
+    if(tipo=="E"){
+        for (int i = 0; i < 4; i++) {
+            tipo="";
+            tipo=particiones[i].part_type;
+            if(tipo=="E"){
+                cout<<"Error: Solo puede haber una partición extendida por disco. "<<endl;
+                return;
+            }
         }
     }
 
@@ -349,98 +373,23 @@ void execFdisk_crear(datos_crearFDISK datos, char path[512]){
             break;
     }
 
+    cout<<endl;
+    cout<<"Type: "<<datos.part_type<<endl;
+    cout<<"Fit: "<<datos.part_fit<<endl;
+    cout<<"Start: "<<datos.part_start<<endl;
+    cout<<"Size: "<<datos.part_size<<endl;
+    cout<<"Name: "<<datos.part_name<<endl;
+    cout<<endl;
+
     retorno.mbr_partition_1=particiones[0];
     retorno.mbr_partition_2=particiones[1];
     retorno.mbr_partition_3=particiones[2];
     retorno.mbr_partition_4=particiones[3];
     actualizarMBR(retorno,path);
-
 }
 
-mbr leerMBR(char ruta[512]){
-    //SACANDO EL NOMBRE DE LA RUTA PARA ENCONTRAR EL OTRO DISCO PARA RAID 1
-    string aux = ruta;
-    size_t pos = 0;
-    string res = "";
-    while((pos = aux.find("/"))!=string::npos){
-        res += aux.substr(0,pos)+"/";
-        aux.erase(0,pos + 1);
-    }
-    //cout<<"RUTA: "<<res<<endl;
-    string nombre = "";
-    pos = aux.find(".");
-    nombre += aux.substr(0,pos);
-    aux.erase(0,pos + 1);
-    //cout<<"NOMBREE: "<<nombre<<endl;
-    char ruta2[512]="";
-    strcpy(ruta2,res.c_str());
-    strcat(ruta2,nombre.c_str());
-    strcat(ruta2,"_rd.dsk");
-
-    mbr retorno;
-    FILE *f;
-
-    if ((f = fopen(ruta, "r+b")) == NULL) {
-        if ((f = fopen(ruta2, "r+b")) == NULL) {
-            cout<<"Error: no se ha podido al abrir el disco!\n";
-        } else {
-            fseek(f, 0, SEEK_SET);
-            fread(&retorno, sizeof (mbr), 1, f);
-            fclose(f);
-        }
-    } else {
-        fseek(f, 0, SEEK_SET);
-        fread(&retorno, sizeof (mbr), 1, f);
-        fclose(f);
-    }
-    return retorno;
-}
-
-void actualizarMBR(mbr nuevo, char ruta[512]) {
-    //SACANDO EL NOMBRE DE LA RUTA PARA ENCONTRAR EL OTRO DISCO PARA RAID 1
-    string aux = ruta;
-    size_t pos = 0;
-    string res = "";
-    while((pos = aux.find("/"))!=string::npos){
-        res += aux.substr(0,pos)+"/";
-        aux.erase(0,pos + 1);
-    }
-    //cout<<"RUTA: "<<res<<endl;
-    string nombre = "";
-    pos = aux.find(".");
-    nombre += aux.substr(0,pos);
-    aux.erase(0,pos + 1);
-    //cout<<"NOMBREE: "<<nombre<<endl;
-    char ruta2[512]="";
-    strcpy(ruta2,res.c_str());
-    strcat(ruta2,nombre.c_str());
-    strcat(ruta2,"_rd.dsk");
-
-    bool principal=true, secundario= true;
-    FILE *f;
-    if ((f = fopen(ruta, "r+b")) == NULL) {
-        principal= false;
-    } else {
-        fseek(f, 0, SEEK_SET);
-        fwrite(&nuevo, sizeof (mbr), 1, f);
-        fclose(f);
-    }
-
-
-
-    if ((f = fopen(ruta2, "r+b")) == NULL) {
-        secundario= false;
-    } else {
-        fseek(f, 0, SEEK_SET);
-        fwrite(&nuevo, sizeof (mbr), 1, f);
-        fclose(f);
-    }
-
-    if(principal==true||secundario==true){
-        cout<<"\t...................Se ha creado la partición................"<<endl;
-    }else{
-        cout<<"Error: no se ha podido al abrir el disco!\n";
-    }
+void execFdisk_crearL(datos_crearFDISK datos, char path[512]){
+    cout<<"ES UNA LOGICA"<<endl;
 }
 
 void cFdisk_eliminar(char path[512], char delet[16], char name[64]){

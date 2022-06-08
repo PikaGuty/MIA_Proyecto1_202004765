@@ -52,11 +52,11 @@ void analizar(){
             token = strtok(NULL, " ");
             comando_MKDISK(token);
         }else if (actual=="rmdisk"){
-            cout<<"******** Ejecutando RMDISK ********"<<endl;
+            cout<<"************************ Ejecutando RMDISK ************************"<<endl;
             token = strtok(NULL, " ");
             comando_RMDISK(token);
         }else if (actual=="fdisk"){
-            cout<<"******** Ejecutando FDISK ********"<<endl;
+            cout<<"************************ Ejecutando FDISK ************************"<<endl;
             token = strtok(NULL, " ");
             comando_FDISK(token);
         }else if (actual=="mount"){
