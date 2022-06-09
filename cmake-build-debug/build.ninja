@@ -79,6 +79,12 @@ build CMakeFiles/MIA_Proyecto1_202004765.dir/metodosGenerales.cpp.o: CXX_COMPILE
   OBJECT_DIR = CMakeFiles/MIA_Proyecto1_202004765.dir
   OBJECT_FILE_DIR = CMakeFiles/MIA_Proyecto1_202004765.dir
 
+build CMakeFiles/MIA_Proyecto1_202004765.dir/cMount.cpp.o: CXX_COMPILER__MIA_Proyecto1_202004765_Debug /home/javierg/Escritorio/U/Archivos/MIA_Proyecto1_202004765/cMount.cpp || cmake_object_order_depends_target_MIA_Proyecto1_202004765
+  DEP_FILE = CMakeFiles/MIA_Proyecto1_202004765.dir/cMount.cpp.o.d
+  FLAGS = -g
+  OBJECT_DIR = CMakeFiles/MIA_Proyecto1_202004765.dir
+  OBJECT_FILE_DIR = CMakeFiles/MIA_Proyecto1_202004765.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target MIA_Proyecto1_202004765
@@ -87,7 +93,7 @@ build CMakeFiles/MIA_Proyecto1_202004765.dir/metodosGenerales.cpp.o: CXX_COMPILE
 #############################################
 # Link the executable MIA_Proyecto1_202004765
 
-build MIA_Proyecto1_202004765: CXX_EXECUTABLE_LINKER__MIA_Proyecto1_202004765_Debug CMakeFiles/MIA_Proyecto1_202004765.dir/main.cpp.o CMakeFiles/MIA_Proyecto1_202004765.dir/Analizador.cpp.o CMakeFiles/MIA_Proyecto1_202004765.dir/cMkdisk.cpp.o CMakeFiles/MIA_Proyecto1_202004765.dir/CFdisk.cpp.o CMakeFiles/MIA_Proyecto1_202004765.dir/metodosGenerales.cpp.o
+build MIA_Proyecto1_202004765: CXX_EXECUTABLE_LINKER__MIA_Proyecto1_202004765_Debug CMakeFiles/MIA_Proyecto1_202004765.dir/main.cpp.o CMakeFiles/MIA_Proyecto1_202004765.dir/Analizador.cpp.o CMakeFiles/MIA_Proyecto1_202004765.dir/cMkdisk.cpp.o CMakeFiles/MIA_Proyecto1_202004765.dir/CFdisk.cpp.o CMakeFiles/MIA_Proyecto1_202004765.dir/metodosGenerales.cpp.o CMakeFiles/MIA_Proyecto1_202004765.dir/cMount.cpp.o
   FLAGS = -g
   OBJECT_DIR = CMakeFiles/MIA_Proyecto1_202004765.dir
   POST_BUILD = :
