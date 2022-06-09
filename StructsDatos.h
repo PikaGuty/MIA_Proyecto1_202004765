@@ -4,6 +4,7 @@
 
 #ifndef MIA_PROYECTO1_202004765_STRUCTSDATOS_H
 #define MIA_PROYECTO1_202004765_STRUCTSDATOS_H
+#include "estructuras.h"
 
 typedef struct{
     bool correcto;
@@ -21,5 +22,10 @@ typedef struct{
     int part_size;
     char part_name[16];
 } partition_crearFDISK;
+
+typedef struct{
+    bool encontrado;
+    ebr B_ebr;
+} prtLogica;
 
 #endif //MIA_PROYECTO1_202004765_STRUCTSDATOS_H

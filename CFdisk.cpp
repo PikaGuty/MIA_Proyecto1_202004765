@@ -17,6 +17,9 @@ using namespace std;
 void execFdisk_crearPyE(datos_crearFDISK datos, char path[512]);
 void execFdisk_crearL(datos_crearFDISK datos, char path[512]);
 void Fdisk_crearL(datos_crearFDISK datos, char path[512]);
+void fdVER(char path[512]);
+void actualizarLogica(char path[512], char name[16], ebr logica);
+prtLogica buscarLogica(char path[512], char name[64], partitiond particiones[4], int i);
 datos_crearFDISK valFdisk_crear(int size, char unit[16], char path[512], char type[16], char fit[16], char name[64], datos_crearFDISK datos);
 
 
@@ -33,6 +36,7 @@ void cFdisk_crear(int size, char unit[16], char path[512], char type[16], char f
         }
 
     }
+    fdVER(path);
 }
 
 datos_crearFDISK valFdisk_crear(int size, char unit[16], char path[512], char type[16], char fit[16], char name[16],datos_crearFDISK datos) {
@@ -590,6 +594,42 @@ void cFdisk_eliminar(char path[512], char delet[16], char name[64]) {
         }
     }
 
+    ebr logic;
+    bool encLog = false;
+
+    if(encontrado==false){
+        for (int j = 0; j < 4; j++) {
+            if (particiones[j].part_type=='E') {
+                prtLogica log = buscarLogica(path,name,particiones,j);
+                encLog = log.encontrado;
+                logic = log.B_ebr;
+                break;
+            }
+        }
+    }
+
+    char nombreAnterior[16];
+    strcpy(nombreAnterior,logic.part_name);
+
+    string auxf = path;
+    size_t pos = 0;
+    string res = "";
+    while ((pos = auxf.find("/")) != string::npos) {
+        res += auxf.substr(0, pos) + "/";
+        auxf.erase(0, pos + 1);
+    }
+
+    string nombree = "";
+    pos = auxf.find(".");
+    nombree += auxf.substr(0, pos);
+    auxf.erase(0, pos + 1);
+
+    char ruta2[512] = "";
+    strcpy(ruta2, res.c_str());
+    strcat(ruta2, nombree.c_str());
+    strcat(ruta2, "_rd.dsk");
+
+
     if (encontrado == true) {
         cout << "Eliminando la Particion " << i + 1 << ", Nombre: " << particiones[i].part_name << endl;
 
@@ -597,9 +637,21 @@ void cFdisk_eliminar(char path[512], char delet[16], char name[64]) {
             cout << "Tipo = fast, size " << particiones[i].part_size << endl;
 
             if(particiones[i].part_type=='E'){
+
                 FILE *f;
                 if ((f = fopen(path, "r+b")) == NULL) {
-                    cout << "Error: no se ha podido al abrir el disco!\n";
+                    if ((f = fopen(ruta2, "r+b")) == NULL) {
+                        cout << "Error: no se ha podido al abrir el disco!\n";
+                    } else {
+                        fseek(f, particiones[i].part_start, SEEK_SET);
+                        //llenando los espacios en blanco
+                        char vacio = '\0';
+                        int i = 0;
+                        for (i = 0; i < particiones[i].part_size; i++) {
+                            fwrite(&vacio, 1, 1, f);
+                        }
+                        fclose(f);
+                    }
                 } else {
                     fseek(f, particiones[i].part_start, SEEK_SET);
                     //llenando los espacios en blanco
@@ -610,6 +662,7 @@ void cFdisk_eliminar(char path[512], char delet[16], char name[64]) {
                     }
                     fclose(f);
                 }
+                cout << "Eliminando particiones logicas de la extendida : " << particiones[i].part_name << endl;
             }
 
             particiones[i].part_size = 0;
@@ -624,7 +677,18 @@ void cFdisk_eliminar(char path[512], char delet[16], char name[64]) {
 
             FILE *f;
             if ((f = fopen(path, "r+b")) == NULL) {
-                cout << "Error: no se ha podido al abrir el disco!\n";
+                if ((f = fopen(ruta2, "r+b")) == NULL) {
+                    cout << "Error: no se ha podido al abrir el disco!\n";
+                } else {
+                    fseek(f, particiones[i].part_start, SEEK_SET);
+                    //llenando los espacios en blanco
+                    char vacio = '\0';
+                    int i = 0;
+                    for (i = 0; i < particiones[i].part_size; i++) {
+                        fwrite(&vacio, 1, 1, f);
+                    }
+                    fclose(f);
+                }
             } else {
                 fseek(f, particiones[i].part_start, SEEK_SET);
                 //llenando los espacios en blanco
@@ -655,15 +719,683 @@ void cFdisk_eliminar(char path[512], char delet[16], char name[64]) {
             B_mbr.mbr_partition_4 = particiones[i];
         }
         actualizarMBR(B_mbr, path);
+    }else if (encLog == true) {
+        cout << "Eliminando la Particion Lógica, Nombre: " << logic.part_name << endl;
+
+        if (strncmp("fast", delet, sizeof("fast")) == 0) {
+            cout << "Tipo = fast, size " << logic.part_size << endl;
+
+            logic.part_fit='\0';
+            logic.part_start=0;
+            strcpy(logic.part_name, "");
+            logic.part_size=0;
+            logic.part_status='0';
+
+        } else {
+            cout << "Tipo =full, size " << logic.part_size << endl;
+
+            FILE *f;
+            if ((f = fopen(path, "r+b")) == NULL) {
+                if ((f = fopen(ruta2, "r+b")) == NULL) {
+                    cout << "Error: no se ha podido al abrir el disco!\n";
+                } else {
+                    fseek(f, logic.part_start, SEEK_SET);
+                    //llenando los espacios en blanco
+                    char vacio = '\0';
+                    int i = 0;
+                    for (i = 0; i < logic.part_size; i++) {
+                        fwrite(&vacio, 1, 1, f);
+                    }
+                    fclose(f);
+                }
+            } else {
+                fseek(f, logic.part_start, SEEK_SET);
+                //llenando los espacios en blanco
+                char vacio = '\0';
+                int i = 0;
+                for (i = 0; i < logic.part_size; i++) {
+                    fwrite(&vacio, 1, 1, f);
+                }
+                fclose(f);
+            }
+
+            logic.part_fit='\0';
+            logic.part_start=0;
+            strcpy(logic.part_name, "");
+            logic.part_size=0;
+            logic.part_status='0';
+
+        }
+
+        actualizarLogica(path,name,logic);
     }else{
         cout << "Error: no se encontró la partición: "<<name<<endl;
+    }
+    fdVER(path);
+}
+
+void actualizarLogica(char path[512], char name[16], ebr logica){
+    mbr retorno = leerMBR(path);
+
+    partitiond particiones[4];
+    particiones[0] = retorno.mbr_partition_1;
+    particiones[1] = retorno.mbr_partition_2;
+    particiones[2] = retorno.mbr_partition_3;
+    particiones[3] = retorno.mbr_partition_4;
+
+    string tipo="";
+    bool hayExt = false;
+    int i;
+    for (i = 0; i < 4; i++) {
+        tipo="";
+        tipo=particiones[i].part_type;
+        if(tipo=="E"){
+            hayExt = true;
+            break;
+        }
+    }
+
+    int inicio = 0;
+    int tamano = 0;
+    int tamanoDiponible = 0;
+
+    if(hayExt==true) {
+        cout<<"La partición extendida es la "<<(i+1)<<"del disco "<<endl;
+        tamanoDiponible = inicio + tamano; //No es el espacio disponible en si, si no el ultimo byte de la partición extendida
+
+        string auxf = path;
+        size_t pos = 0;
+        string res = "";
+        while((pos = auxf.find("/"))!=string::npos){
+            res += auxf.substr(0,pos)+"/";
+            auxf.erase(0,pos + 1);
+        }
+
+        string nombre = "";
+        pos = auxf.find(".");
+        nombre += auxf.substr(0,pos);
+        auxf.erase(0,pos + 1);
+
+        char ruta2[512]="";
+        strcpy(ruta2,res.c_str());
+        strcat(ruta2,nombre.c_str());
+        strcat(ruta2,"_rd.dsk");
+
+        FILE *f;
+        if ((f = fopen(path, "r+b")) == NULL) {
+            if ((f = fopen(ruta2, "r+b")) == NULL) {
+                cout<<"Error: no se ha podido al abrir el disco!\n";
+            }else{
+                ebr B_ebr;
+
+                fseek(f, inicio, SEEK_SET);
+                fread(&B_ebr, sizeof (ebr), 1, f);
+                if (B_ebr.part_fit == 'B' || B_ebr.part_fit == 'F' || B_ebr.part_fit == 'W') {
+                    ebr anterior;
+                    if(B_ebr.part_name==logica.part_name){
+                        cout<<"la encontre"<<logica.part_name<<endl;
+                        return;
+                    }
+                    anterior = B_ebr;
+                    int siguiente = B_ebr.part_next;
+                    ebr aux;
+
+                    while (true){
+                        fseek(f, siguiente, SEEK_SET);
+                        fread(&aux, sizeof (ebr), 1, f);
+
+                        if (aux.part_fit == 'B' || aux.part_fit == 'F' || aux.part_fit == 'W') { //Hay siguiente
+                            if(B_ebr.part_name==logica.part_name){
+                                cout<<"la encontre"<<logica.part_name<<endl;
+                                return;
+                            }
+                            siguiente = aux.part_next;
+                            anterior = aux;
+                        } else { //Es el ultimo
+
+                            break;
+                        }
+                    }
+                }
+                fclose(f);
+            }
+        }else{
+            ebr B_ebr;
+
+            fseek(f, inicio, SEEK_SET);
+            fread(&B_ebr, sizeof (ebr), 1, f);
+            if (B_ebr.part_fit == 'B' || B_ebr.part_fit == 'F' || B_ebr.part_fit == 'W') {
+                ebr anterior;
+                if(B_ebr.part_name==logica.part_name){
+                    cout<<"la encontre"<<logica.part_name<<endl;
+                    return;
+                }
+                anterior = B_ebr;
+                int siguiente = B_ebr.part_next;
+                ebr aux;
+
+                while (true){
+                    fseek(f, siguiente, SEEK_SET);
+                    fread(&aux, sizeof (ebr), 1, f);
+
+                    if (aux.part_fit == 'B' || aux.part_fit == 'F' || aux.part_fit == 'W') { //Hay siguiente
+                        if(B_ebr.part_name==logica.part_name){
+                            cout<<"la encontre"<<logica.part_name<<endl;
+                            return;
+                        }
+                        siguiente = aux.part_next;
+                        anterior = aux;
+                    } else { //Es el ultimo
+
+                        break;
+                    }
+                }
+            }
+            fclose(f);
+        }
+    }else{
+        cout<<"Error: No se encontró ninguna partición extendida en el disco"<<endl;
+        return;
+    }
+}
+
+prtLogica buscarLogica(char path[512], char name[64], partitiond particiones[4], int i) {
+    int inicio = particiones[i].part_start;
+    int tamano = particiones[i].part_size;
+    int tamanoDiponible = inicio + tamano;
+
+    string auxf = path;
+    size_t pos = 0;
+    string res = "";
+    while ((pos = auxf.find("/")) != string::npos) {
+        res += auxf.substr(0, pos) + "/";
+        auxf.erase(0, pos + 1);
+    }
+
+    string nombre = "";
+    pos = auxf.find(".");
+    nombre += auxf.substr(0, pos);
+    auxf.erase(0, pos + 1);
+
+    char ruta2[512] = "";
+    strcpy(ruta2, res.c_str());
+    strcat(ruta2, nombre.c_str());
+    strcat(ruta2, "_rd.dsk");
+
+    FILE *f;
+    if ((f = fopen(path, "r+b")) == NULL) {
+        if ((f = fopen(ruta2, "r+b")) == NULL) {
+            cout << "Error: no se ha podido al abrir el disco!\n";
+        } else {
+            ebr B_ebr;
+            prtLogica rtrnLogica;
+            rtrnLogica.encontrado = false;
+
+            fseek(f, inicio, SEEK_SET);
+            fread(&B_ebr, sizeof(ebr), 1, f);
+            if (B_ebr.part_fit == 'B' || B_ebr.part_fit == 'F' || B_ebr.part_fit == 'W') {
+                char nombre1[16] = "";
+                char nombre2[16] = "";
+
+                strcpy(nombre1, B_ebr.part_name);
+                strcpy(nombre2, name);
+
+                if (strncmp(nombre2, nombre1, 16) == 0) {
+                    rtrnLogica.B_ebr = B_ebr;
+                    rtrnLogica.encontrado = true;
+                    return rtrnLogica;
+                }
+
+                ebr anterior;
+                anterior = B_ebr;
+                int siguiente = B_ebr.part_next;
+                ebr aux;
+
+                while (true) {
+                    fseek(f, siguiente, SEEK_SET);
+                    fread(&aux, sizeof(ebr), 1, f);
+
+                    if (aux.part_fit == 'B' || aux.part_fit == 'F' || aux.part_fit == 'W') { //Hay siguiente
+
+                        strcpy(nombre1, aux.part_name);
+                        strcpy(nombre2, name);
+                        if (strncmp(nombre2, nombre1, 16) == 0) {
+                            rtrnLogica.B_ebr = aux;
+                            rtrnLogica.encontrado = true;
+                            return rtrnLogica;
+                        }
+
+                        siguiente = aux.part_next;
+                        anterior = aux;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            fclose(f);
+            return rtrnLogica;
+        }
+    } else {
+        ebr B_ebr;
+        prtLogica rtrnLogica;
+        rtrnLogica.encontrado = false;
+
+        fseek(f, inicio, SEEK_SET);
+        fread(&B_ebr, sizeof(ebr), 1, f);
+        if (B_ebr.part_fit == 'B' || B_ebr.part_fit == 'F' || B_ebr.part_fit == 'W') {
+            char nombre1[16] = "";
+            char nombre2[16] = "";
+
+            strcpy(nombre1, B_ebr.part_name);
+            strcpy(nombre2, name);
+
+            if (strncmp(nombre2, nombre1, 16) == 0) {
+                rtrnLogica.B_ebr = B_ebr;
+                rtrnLogica.encontrado = true;
+                return rtrnLogica;
+            }
+
+            ebr anterior;
+            anterior = B_ebr;
+            int siguiente = B_ebr.part_next;
+            ebr aux;
+
+            while (true) {
+                fseek(f, siguiente, SEEK_SET);
+                fread(&aux, sizeof(ebr), 1, f);
+
+                if (aux.part_fit == 'B' || aux.part_fit == 'F' || aux.part_fit == 'W') { //Hay siguiente
+
+                    strcpy(nombre1, aux.part_name);
+                    strcpy(nombre2, name);
+                    if (strncmp(nombre2, nombre1, 16) == 0) {
+                        rtrnLogica.B_ebr = aux;
+                        rtrnLogica.encontrado = true;
+                        return rtrnLogica;
+                    }
+
+                    siguiente = aux.part_next;
+                    anterior = aux;
+                } else {
+                    break;
+                }
+            }
+        }
+        fclose(f);
+        return rtrnLogica;
     }
 }
 
 void cFdisk_add(char unit[16], char path[512], char name[64], int add) {
+    //Evaluando unit
+    string str_unit="";
+    str_unit+=unit;
+    if(str_unit!="") {
+        if (str_unit != "B" && str_unit != "b" && str_unit != "K" && str_unit != "k" && str_unit != "M" && str_unit != "m") {
+            cout << "Error: El parámetro \"@unit\" solo recibe los valores: B, K y M" << endl;
+            return;
+        }
+    }else{
+        strcpy(unit,"K");
+    }
 
+    str_unit="";
+    str_unit+=unit;
+    if(str_unit=="B"||str_unit=="b"){
+
+    }else if(str_unit=="K"||str_unit=="k"){
+        add = 1024 * add;
+    }else if(str_unit=="M"||str_unit=="m"){
+        add = 1024 * 1024 * add;
+    }
+
+    mbr B_mbr = leerMBR(path);
+    partitiond particiones[4];
+    particiones[0] = B_mbr.mbr_partition_1;
+    particiones[1] = B_mbr.mbr_partition_2;
+    particiones[2] = B_mbr.mbr_partition_3;
+    particiones[3] = B_mbr.mbr_partition_4;
+
+    int i;
+    char nombre[16];
+    char nombre2[16];
+
+    bool encontrado = false;
+    for (i = 0; i < 4; i++) {
+        strcpy(nombre, particiones[i].part_name);
+        strcpy(nombre2, name);
+
+        if (strncmp(nombre2, nombre, 16) == 0) {
+            encontrado = true;
+            break;
+        }
+    }
+
+    int prtActiva[] = {0,0,0,0};
+
+    for (int j = 0; j < 4; j++) {
+        if(particiones[j].part_size!=0){
+            prtActiva[j]=1;
+        }
+    }
+
+    int tamanoDisponible = 0;
+    if(encontrado==true){
+        if(i==0){ //Casos en los que se puede añadir a la partición 1
+            //Añadiendo a la partición 1 del disco
+            cout<<"Añadiendo a la partición 1 del disco"<<endl;
+            if(prtActiva[0]==1 && prtActiva[1]==0 && prtActiva[2]==0 && prtActiva[3]==0){//1 0 0 0
+                tamanoDisponible = B_mbr.mbr_tamano - (particiones[0].part_start+particiones[0].part_size+1);
+                if(add>tamanoDisponible){
+                    cout<<"Error: el espacio disponible no es suficiente para añadir "<<add<<" a la partición "<<(i+1)<<endl;
+                    return;
+                } else{
+                    cout<<"Tamaño anterior: "<<particiones[0].part_size<<"bytes"<<endl;
+                    particiones[0].part_size = particiones[0].part_size + add;
+                    cout<<"Tamaño nuevo: "<<particiones[0].part_size<<"bytes"<<endl;
+
+                }
+            }else if(prtActiva[0]==1 && prtActiva[1]==0 && prtActiva[2]==0 && prtActiva[3]==1){//1 0 0 1
+                tamanoDisponible = particiones[3].part_start - (particiones[0].part_start+particiones[0].part_size+1);
+                if(add>tamanoDisponible){
+                    cout<<"Error: el espacio disponible no es suficiente para añadir "<<add<<" a la partición "<<(i+1)<<endl;
+                    return;
+                } else{
+                    cout<<"Tamaño anterior: "<<particiones[0].part_size<<"bytes"<<endl;
+                    particiones[0].part_size = particiones[0].part_size + add;
+                    cout<<"Tamaño nuevo: "<<particiones[0].part_size<<"bytes"<<endl;
+
+                }
+            }else if(prtActiva[0]==1 && prtActiva[1]==0 && prtActiva[2]==1 && prtActiva[3]==0){//1 0 1 0
+                tamanoDisponible = particiones[2].part_start - (particiones[0].part_start+particiones[0].part_size+1);
+                if(add>tamanoDisponible){
+                    cout<<"Error: el espacio disponible no es suficiente para añadir "<<add<<" a la partición "<<(i+1)<<endl;
+                    return;
+                } else{
+                    cout<<"Tamaño anterior: "<<particiones[0].part_size<<"bytes"<<endl;
+                    particiones[0].part_size = particiones[0].part_size + add;
+                    cout<<"Tamaño nuevo: "<<particiones[0].part_size<<"bytes"<<endl;
+
+                }
+            }else if(prtActiva[0]==1 && prtActiva[1]==0 && prtActiva[2]==1 && prtActiva[3]==1){//1 0 1 1
+                tamanoDisponible = particiones[2].part_start - (particiones[0].part_start+particiones[0].part_size+1);
+                if(add>tamanoDisponible){
+                    cout<<"Error: el espacio disponible no es suficiente para añadir "<<add<<" a la partición "<<(i+1)<<endl;
+                    return;
+                } else{
+                    cout<<"Tamaño anterior: "<<particiones[0].part_size<<"bytes"<<endl;
+                    particiones[0].part_size = particiones[0].part_size + add;
+                    cout<<"Tamaño nuevo: "<<particiones[0].part_size<<"bytes"<<endl;
+
+                }
+            }else if(prtActiva[0]==1 && prtActiva[1]==1 && prtActiva[2]==0 && prtActiva[3]==0){//1 1 0 0
+                tamanoDisponible = particiones[1].part_start - (particiones[0].part_start+particiones[0].part_size+1);
+                if(add>tamanoDisponible){
+                    cout<<"Error: el espacio disponible no es suficiente para añadir "<<add<<" a la partición "<<(i+1)<<endl;
+                    return;
+                } else{
+                    cout<<"Tamaño anterior: "<<particiones[0].part_size<<"bytes"<<endl;
+                    particiones[0].part_size = particiones[0].part_size + add;
+                    cout<<"Tamaño nuevo: "<<particiones[0].part_size<<"bytes"<<endl;
+
+                }
+            }else if(prtActiva[0]==1 && prtActiva[1]==1 && prtActiva[2]==0 && prtActiva[3]==1){//1 1 0 1
+                tamanoDisponible = particiones[1].part_start - (particiones[0].part_start+particiones[0].part_size+1);
+                if(add>tamanoDisponible){
+                    cout<<"Error: el espacio disponible no es suficiente para añadir "<<add<<" a la partición "<<(i+1)<<endl;
+                    return;
+                } else{
+                    cout<<"Tamaño anterior: "<<particiones[0].part_size<<"bytes"<<endl;
+                    particiones[0].part_size = particiones[0].part_size + add;
+                    cout<<"Tamaño nuevo: "<<particiones[0].part_size<<"bytes"<<endl;
+
+                }
+            }else if(prtActiva[0]==1 && prtActiva[1]==1 && prtActiva[2]==1 && prtActiva[3]==0){//1 1 1 0
+                tamanoDisponible = particiones[1].part_start - (particiones[0].part_start+particiones[0].part_size+1);
+                cout<<add<<"El tamaño disponible es: "<<tamanoDisponible<<endl;
+                if(add>tamanoDisponible){
+                    cout<<"Error: el espacio disponible no es suficiente para añadir "<<add<<" a la partición "<<(i+1)<<endl;
+                    return;
+                } else{
+                    cout<<"Tamaño anterior: "<<particiones[0].part_size<<"bytes"<<endl;
+                    particiones[0].part_size = particiones[0].part_size + add;
+                    cout<<"Tamaño nuevo: "<<particiones[0].part_size<<"bytes"<<endl;
+
+                }
+            }else if(prtActiva[0]==1 && prtActiva[1]==1 && prtActiva[2]==1 && prtActiva[3]==1){//1 1 1 1
+                tamanoDisponible = particiones[1].part_start - (particiones[0].part_start+particiones[0].part_size+1);
+                if(add>tamanoDisponible){
+                    cout<<"Error: el espacio disponible no es suficiente para añadir "<<add<<" a la partición "<<(i+1)<<endl;
+                    return;
+                } else{
+                    cout<<"Tamaño anterior: "<<particiones[0].part_size<<"bytes"<<endl;
+                    particiones[0].part_size = particiones[0].part_size + add;
+                    cout<<"Tamaño nuevo: "<<particiones[0].part_size<<"bytes"<<endl;
+
+                }
+            }
+        } else if(i==1){ //Casos en los que se puede añadir a la partición 2
+            cout<<"Añadiendo a la partición 2 del disco"<<endl;
+            if(prtActiva[1]==1 && prtActiva[2]==0 && prtActiva[3]==0){//X 1 0 0
+                tamanoDisponible = B_mbr.mbr_tamano - (particiones[1].part_start+particiones[1].part_size+1);
+                if(add>tamanoDisponible){
+                    cout<<"Error: el espacio disponible no es suficiente para añadir "<<add<<" a la partición "<<(i+1)<<endl;
+                    return;
+                } else{
+                    cout<<"Tamaño anterior: "<<particiones[1].part_size<<"bytes"<<endl;
+                    particiones[1].part_size = particiones[1].part_size + add;
+                    cout<<"Tamaño nuevo: "<<particiones[1].part_size<<"bytes"<<endl;
+
+                }
+            }else if(prtActiva[1]==1 && prtActiva[2]==0 && prtActiva[3]==1){//X 1 0 1
+                tamanoDisponible = particiones[3].part_start - (particiones[1].part_start+particiones[1].part_size+1);
+                if(add>tamanoDisponible){
+                    cout<<"Error: el espacio disponible no es suficiente para añadir "<<add<<" a la partición "<<(i+1)<<endl;
+                    return;
+                } else{
+                    cout<<"Tamaño anterior: "<<particiones[1].part_size<<"bytes"<<endl;
+                    particiones[1].part_size = particiones[1].part_size + add;
+                    cout<<"Tamaño nuevo: "<<particiones[1].part_size<<"bytes"<<endl;
+
+                }
+            }else if(prtActiva[1]==1 && prtActiva[2]==1 && prtActiva[3]==0){//X 1 1 0
+                tamanoDisponible = particiones[2].part_start - (particiones[1].part_start+particiones[1].part_size+1);
+                if(add>tamanoDisponible){
+                    cout<<"Error: el espacio disponible no es suficiente para añadir "<<add<<" a la partición "<<(i+1)<<endl;
+                    return;
+                } else{
+                    cout<<"Tamaño anterior: "<<particiones[1].part_size<<"bytes"<<endl;
+                    particiones[1].part_size = particiones[1].part_size + add;
+                    cout<<"Tamaño nuevo: "<<particiones[1].part_size<<"bytes"<<endl;
+
+                }
+            }else if(prtActiva[1]==1 && prtActiva[2]==1 && prtActiva[3]==1){//X 1 1 1
+                tamanoDisponible = particiones[2].part_start - (particiones[1].part_start+particiones[1].part_size+1);
+                if(add>tamanoDisponible){
+                    cout<<"Error: el espacio disponible no es suficiente para añadir "<<add<<" a la partición "<<(i+1)<<endl;
+                    return;
+                } else{
+                    cout<<"Tamaño anterior: "<<particiones[1].part_size<<"bytes"<<endl;
+                    particiones[1].part_size = particiones[1].part_size + add;
+                    cout<<"Tamaño nuevo: "<<particiones[1].part_size<<"bytes"<<endl;
+
+                }
+            }
+        } else if(i==2){ //Casos en los que se puede añadir a la partición 3
+            cout<<"Añadiendo a la partición 3 del disco"<<endl;
+            if(prtActiva[2]==1 && prtActiva[3]==0){//X X 1 0
+                tamanoDisponible = B_mbr.mbr_tamano - (particiones[2].part_start+particiones[2].part_size+1);
+                if(add>tamanoDisponible){
+                    cout<<"Error: el espacio disponible no es suficiente para añadir "<<add<<" a la partición "<<(i+1)<<endl;
+                    return;
+                } else{
+                    cout<<"Tamaño anterior: "<<particiones[2].part_size<<"bytes"<<endl;
+                    particiones[2].part_size = particiones[2].part_size + add;
+                    cout<<"Tamaño nuevo: "<<particiones[2].part_size<<"bytes"<<endl;
+
+                }
+            }else if(prtActiva[2]==1 && prtActiva[3]==1){//X X 1 1
+                tamanoDisponible = particiones[3].part_start - (particiones[2].part_start+particiones[2].part_size+1);
+                if(add>tamanoDisponible){
+                    cout<<"Error: el espacio disponible no es suficiente para añadir "<<add<<" a la partición "<<(i+1)<<endl;
+                    return;
+                } else{
+                    cout<<"Tamaño anterior: "<<particiones[2].part_size<<"bytes"<<endl;
+                    particiones[2].part_size = particiones[2].part_size + add;
+                    cout<<"Tamaño nuevo: "<<particiones[2].part_size<<"bytes"<<endl;
+
+                }
+            }
+        } else if(i==3){ //Casos en los que se puede añadir a la partición 4
+            cout<<"Añadiendo a la partición 4 del disco"<<endl;
+            if(prtActiva[3]==1){//X X 1 1
+                tamanoDisponible = B_mbr.mbr_tamano - (particiones[3].part_start+particiones[3].part_size+1);
+                if(add>tamanoDisponible){
+                    cout<<"Error: el espacio disponible no es suficiente para añadir "<<add<<" a la partición "<<(i+1)<<endl;
+                    return;
+                } else{
+                    cout<<"Tamaño anterior: "<<particiones[3].part_size<<"bytes"<<endl;
+
+                    particiones[3].part_size = particiones[3].part_size + add;
+                    cout<<"Tamaño nuevo: "<<particiones[3].part_size<<"bytes"<<endl;
+                }
+            }
+        }
+        if (i == 0) {
+            B_mbr.mbr_partition_1 = particiones[i];
+        } else if (i == 1){
+            B_mbr.mbr_partition_2 = particiones[i];
+        } else if (i == 2){
+            B_mbr.mbr_partition_3 = particiones[i];
+        }else if (i == 3) {
+            B_mbr.mbr_partition_4 = particiones[i];
+        }
+
+        actualizarMBR(B_mbr,path);
+    }else{
+        cout << "Error: no se encontró la partición: "<<name<<endl;
+    }
+
+    fdVER(path);
 }
 
 void cFdisk_mover(char path[512], char name[64], char mov[64]){
+    cout<<"En terminos de @mov, no tenemos @mov :'("<<endl;
+}
 
+void fdVER(char path[512]){
+    mbr retorno = leerMBR(path);
+
+    partitiond particiones[4];
+    particiones[0] = retorno.mbr_partition_1;
+    particiones[1] = retorno.mbr_partition_2;
+    particiones[2] = retorno.mbr_partition_3;
+    particiones[3] = retorno.mbr_partition_4;
+
+    for (int i = 0; i < 4; ++i) {
+        cout<<"********** Partición "<<(i+1)<<" **********"<<endl;
+        cout<<"Name: "<<particiones[i].part_name<<endl;
+        cout<<"Tipo: "<<particiones[i].part_type<<endl;
+        cout<<"Inicio: "<<particiones[i].part_start<<endl;
+        cout<<"FIN: "<<(particiones[i].part_start+particiones[i].part_size)<<endl;
+
+        if(particiones[i].part_type=='E'){
+            int inicio = particiones[i].part_start;
+            int tamano = particiones[i].part_size;
+            int tamanoDiponible = inicio + tamano;
+
+            string auxf = path;
+            size_t pos = 0;
+            string res = "";
+            while((pos = auxf.find("/"))!=string::npos){
+                res += auxf.substr(0,pos)+"/";
+                auxf.erase(0,pos + 1);
+            }
+
+            string nombre = "";
+            pos = auxf.find(".");
+            nombre += auxf.substr(0,pos);
+            auxf.erase(0,pos + 1);
+
+            char ruta2[512]="";
+            strcpy(ruta2,res.c_str());
+            strcat(ruta2,nombre.c_str());
+            strcat(ruta2,"_rd.dsk");
+
+            FILE *f;
+            if ((f = fopen(path, "r+b")) == NULL) {
+                if ((f = fopen(ruta2, "r+b")) == NULL) {
+                    cout<<"Error: no se ha podido al abrir el disco!\n";
+                }else{
+                    ebr B_ebr;
+
+                    fseek(f, inicio, SEEK_SET);
+                    fread(&B_ebr, sizeof (ebr), 1, f);
+                    if (B_ebr.part_fit == 'B' || B_ebr.part_fit == 'F' || B_ebr.part_fit == 'W') {
+                        cout<<"************************"<<endl;
+                        cout<<"Name: "<<B_ebr.part_name<<endl;
+                        cout<<"Inicio: "<<B_ebr.part_start<<endl;
+                        cout<<"FIN: "<<(B_ebr.part_start+B_ebr.part_size)<<endl;
+
+                        ebr anterior;
+                        anterior = B_ebr;
+                        int siguiente = B_ebr.part_next;
+                        ebr aux;
+
+                        while (true){
+                            fseek(f, siguiente, SEEK_SET);
+                            fread(&aux, sizeof (ebr), 1, f);
+
+                            if (aux.part_fit == 'B' || aux.part_fit == 'F' || aux.part_fit == 'W') { //Hay siguiente
+                                cout<<"Name: "<<aux.part_name<<endl;
+                                cout<<"Inicio: "<<aux.part_start<<endl;
+                                cout<<"FIN: "<<(aux.part_start+aux.part_size)<<endl;
+
+                                siguiente = aux.part_next;
+                                anterior = aux;
+                            }else{
+                                break;
+                            }
+                        }
+                    }
+                    fclose(f);
+                }
+            }else{
+                ebr B_ebr;
+
+                fseek(f, inicio, SEEK_SET);
+                fread(&B_ebr, sizeof (ebr), 1, f);
+                if (B_ebr.part_fit == 'B' || B_ebr.part_fit == 'F' || B_ebr.part_fit == 'W') {
+                    cout<<"*******************************"<<endl;
+                    cout<<"Name: "<<B_ebr.part_name<<endl;
+                    cout<<"Inicio: "<<B_ebr.part_start<<endl;
+                    cout<<"FIN: "<<(B_ebr.part_start+B_ebr.part_size)<<endl;
+
+                    ebr anterior;
+                    anterior = B_ebr;
+                    int siguiente = B_ebr.part_next;
+                    ebr aux;
+
+                    while (true){
+                        fseek(f, siguiente, SEEK_SET);
+                        fread(&aux, sizeof (ebr), 1, f);
+
+                        if (aux.part_fit == 'B' || aux.part_fit == 'F' || aux.part_fit == 'W') { //Hay siguiente
+                            cout<<"Name: "<<aux.part_name<<endl;
+                            cout<<"Inicio: "<<aux.part_start<<endl;
+                            cout<<"FIN: "<<(aux.part_start+aux.part_size)<<endl;
+
+                            siguiente = aux.part_next;
+                            anterior = aux;
+                        }else{
+                            break;
+                        }
+                    }
+                }
+                fclose(f);
+            }
+        }
+
+    }
+    cout<<"*******************************************"<<endl;
 }
