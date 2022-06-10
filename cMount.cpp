@@ -5,29 +5,47 @@
 #include "cMount.h"
 
 #include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <math.h>
+#include <time.h>
 
-#include "estructuras.h"
-#include "StructsDatos.h"
-#include "metodosGenerales.h"
 
 using namespace std;
 
-partitiond devolverParticion(char ruta[512], char nombre[16]);
 
-void mount(char ruta[512], char nombre[16]) {
+void inicializarListaMount();
+void mntPush(mnt_lista* lista, partitiond particion, ebr logica, char ruta[512]);
+partitiond devolverParticion(char ruta[512], char nombre[16]);
+ebr devolverLogica(char ruta[512], char nombre[16]);
+mnt_nodo* mntCrearNodo(partitiond particion, ebr logica, char ruta[512]);
+char letraDeDisco(mnt_lista*lista, char ruta[512]);
+char numeroDeDisco(mnt_lista*lista, char letra);
+
+const string fecha(time_t now) {
+    struct tm  tstruct;
+    char       buf[80];
+    tstruct = *localtime(&now);
+    strftime(buf, sizeof(buf), "%X %d-%m-%Y ", &tstruct);
+
+    return buf;
+}
+
+void cMount(char ruta[512], char nombre[16]) {
     partitiond part = devolverParticion(ruta, nombre); //si se econtro en primaria o secundaria
     ebr eb;
     cout<<"Montando "<<endl;
 
     if (part.part_fit == 'B' || part.part_fit == 'F' || part.part_fit == 'W') {//si no hay primaria, buscar en la secundaria
-        mntPush(part, eb, ruta); //se ingresa la particion a la lista.
+        mntPush(listaDeParticiones,part, eb, ruta); //se ingresa la particion a la lista.
+        mntVER();
     } else {
         eb = devolverLogica(ruta, nombre);
         if (eb.part_fit == 'B' || eb.part_fit == 'F' || eb.part_fit == 'W')
-            mntPush(part, eb, ruta);
+            mntPush(listaDeParticiones,part, eb, ruta);
         else
-            puts("\t[ERROR]No se encontró la particion");
+            cout<<"Error: No se encontró la partición en el disco"<<endl;
     }
 
 }
@@ -41,12 +59,10 @@ partitiond devolverParticion(char ruta[512], char nombre[16]) {
     particiones[2] = B_mbr.mbr_partition_3;
     particiones[3] = B_mbr.mbr_partition_4;
 
-    bool encontrada = false;
     int i;
     for (i = 0; i < 4; i++) {
         if (strncmp(particiones[i].part_name, nombre, 16) == 0) {
             if (particiones[i].part_type == 'P') {
-                encontrada = true;
                 return particiones[i];
             }else{
                 break;
@@ -54,15 +70,200 @@ partitiond devolverParticion(char ruta[512], char nombre[16]) {
         }
     }
 
-    if (encontrada == false) {
-        partitiond reto;
-        reto.part_status='0';
-        reto.part_type='\0';
-        reto.part_fit='\0';
-        reto.part_start = 0;
-        reto.part_size = 0;
-        strcpy(reto.part_name,"");
+    partitiond reto;
+    reto.part_status='0';
+    reto.part_type='\0';
+    reto.part_fit='\0';
+    reto.part_start = 0;
+    reto.part_size = 0;
+    strcpy(reto.part_name,"");
 
-        return reto;
+    return reto;
+
+}
+
+ebr devolverLogica(char ruta[512], char nombre[16]) {
+    mbr B_mbr = leerMBR(ruta);
+    //buscando la posicion de la partición logica
+    partitiond particiones[4];
+    particiones[0] = B_mbr.mbr_partition_1;
+    particiones[1] = B_mbr.mbr_partition_2;
+    particiones[2] = B_mbr.mbr_partition_3;
+    particiones[3] = B_mbr.mbr_partition_4;
+
+    bool hayExtendida = false;
+    int i;
+    for (i = 0; i < 4; i++) {
+        if (particiones[i].part_type == 'e') {
+            hayExtendida = true;
+            break;
+        }
     }
+    int inicio = 0;
+    int tamano = 0;
+    int espacioDisponible = 0;
+    bool seEncontroLogica = false;
+
+    if (hayExtendida == true) {
+        //printf("\tLa partición extendida es=%i|Nombre: %s\n", i + 1, particiones[i].part_name);
+        inicio = particiones[i].part_start;
+        tamano = particiones[i].part_size;
+        espacioDisponible = inicio + tamano;
+        FILE *f;
+        if ((f = fopen(ruta, "r+b")) == NULL) {
+            printf("\t[ERROR]error al abrir el disco!\n");
+        } else {
+            ebr B_ebr;
+            //printf("\tinicio = %i\n", inicio);
+            fseek(f, inicio, SEEK_SET);
+            fread(&B_ebr, sizeof (ebr), 1, f);
+            if (B_ebr.part_fit == 'B' || B_ebr.part_fit == 'F' || B_ebr.part_fit == 'W') {
+                //Si se encontró el primer ERB
+                int result = strncmp(B_ebr.part_name, nombre, 16);
+                if (result == 0) {
+                    metodoDeColocacionExtendida = particiones[i].part_fit;
+                    seEncontroLogica = true;
+                    return B_ebr;
+                }
+                int siguiente = B_ebr.part_next;
+
+                while (true) {
+                    ebr aux_ebr;
+                    fseek(f, siguiente, SEEK_SET);
+                    fread(&aux_ebr, sizeof (ebr), 1, f);
+                    if (aux_ebr.part_fit == 'b' || aux_ebr.part_fit == 'f' || aux_ebr.part_fit == 'w') {
+                        int resultado = strncmp(aux_ebr.part_name, nombre, 16);
+                        if (resultado == 0) {
+                            metodoDeColocacionExtendida = particiones[i].part_fit;
+                            seEncontroLogica = true;
+                            return aux_ebr;
+                        } else {
+                            siguiente = aux_ebr.part_next;
+                        }
+                        //es que si hay siguiente
+                    } else {
+                        break;
+                    }
+                }
+            }
+            //else NO hay primer EBR
+            fclose(f);
+        }
+    }
+    ebr retor;
+    return retor;
+
+}
+
+void inicializarListaMount() {
+    listaDeParticiones = (mnt_lista*) malloc(sizeof (mnt_lista)); //inicializando las listas
+    listaDeParticiones->cabeza = NULL;
+}
+
+void mntVER() {
+    cout<<"HOLAAAAAAAAAA"<<endl;
+    mnt_nodo* puntero = listaDeParticiones->cabeza;
+    while (puntero->siguiente) {
+        cout<<puntero->mnt_particion.part_name<<endl;
+        cout<<puntero->mnt_id<<endl;
+        cout<<puntero->mnt_ruta<<endl;
+        puntero = puntero->siguiente;
+    }
+    cout<<puntero->mnt_particion.part_name<<endl;
+    cout<<puntero->mnt_id<<endl;
+    cout<<puntero->mnt_ruta<<endl;
+}
+
+void mntPush(mnt_lista* lista, partitiond particion, ebr logica, char ruta[512]) {
+    mnt_nodo* nodo = mntCrearNodo(particion, logica, ruta);
+    if (lista->cabeza == NULL) {
+        //Lista vacia
+        lista->cabeza = nodo;
+    } else {
+        //Lista llena
+        mnt_nodo* puntero = lista->cabeza;
+        while (puntero->siguiente) {
+            puntero = puntero->siguiente;
+        }
+        puntero->siguiente = nodo;
+    }
+}
+
+
+mnt_nodo* mntCrearNodo(partitiond particion, ebr logica, char ruta[512]) {
+    mnt_nodo* nodo = (mnt_nodo*) malloc(sizeof (mnt_nodo));
+    nodo->mnt_particion = particion;
+    nodo->mnt_ebr = logica;
+    strcpy(nodo->mnt_ruta, ruta);
+
+    char resultado = letraDeDisco(listaDeParticiones, ruta);
+    strcpy(nodo->mnt_id, "vd00"); //aquí tengo que recorrere la lista para colocarle el id que se necesita
+    nodo->mnt_id[2] = resultado;
+    nodo->mnt_id[3] = numeroDeDisco(listaDeParticiones, resultado);
+
+    time_t tiem = time(0);
+
+    srand(time(NULL));
+    strcpy(nodo->tiempo, fecha(time(0)).c_str());
+
+    nodo->siguiente = NULL;
+    return nodo;
+}
+
+char letraDeDisco(mnt_lista*lista, char ruta[512]) {
+    mnt_nodo*puntero = lista->cabeza;
+    char letraTemporal = 'a';
+    int retorno = 0;
+    if (lista->cabeza == NULL) {
+        return 'a';
+    }
+    while (puntero) {
+        retorno = strncmp(ruta, puntero->mnt_ruta, 512);
+        if (retorno == 0) {
+            char reto = puntero->mnt_id[2];
+            return reto;
+            //si lo encontro retorna 0
+        } else {
+            int resul = strcmp(&letraTemporal, &puntero->mnt_id[2]);
+            if ((puntero->mnt_id[2]) > letraTemporal)
+                letraTemporal = puntero->mnt_id[2]; //se va buscando el mas grande
+        }
+        puntero = puntero->siguiente;
+    };
+
+    if (retorno == 0) {
+        return 'a';
+
+    } else {
+        return letraTemporal + 1;
+    }
+}
+
+char numeroDeDisco(mnt_lista*lista, char letra) {
+    mnt_nodo*puntero = lista->cabeza;
+    char letraTemporal = '1';
+    int retorno = 1;
+    if (lista->cabeza == NULL) {
+        return '1';
+    }
+    while (puntero) {
+        if (letra == puntero->mnt_id[2])
+            retorno = 0;
+        //retorno= strcmp(&letra,&puntero->mnt_id[2]);//retorna 0 si son iguales
+        if (retorno == 0) {
+
+            if ((puntero->mnt_id[3]) > letraTemporal)
+                letraTemporal = puntero->mnt_id[3]; //se va buscando el mas grande
+
+            //si lo encontro retorna 0
+        }
+        puntero = puntero->siguiente;
+    };
+
+    if (retorno != 0) {
+        return '1';
+    } else {
+        return letraTemporal + 1;
+    }
+
 }

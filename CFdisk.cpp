@@ -19,7 +19,7 @@ void execFdisk_crearL(datos_crearFDISK datos, char path[512]);
 void Fdisk_crearL(datos_crearFDISK datos, char path[512]);
 void fdVER(char path[512]);
 void actualizarLogica(char path[512], char name[16], ebr logica);
-prtLogica buscarLogica(char path[512], char name[64], partitiond particiones[4], int i);
+
 datos_crearFDISK valFdisk_crear(int size, char unit[16], char path[512], char type[16], char fit[16], char name[64], datos_crearFDISK datos);
 
 

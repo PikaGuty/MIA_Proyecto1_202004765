@@ -5,9 +5,11 @@
 #ifndef MIA_PROYECTO1_202004765_ANALIZADOR_H
 #define MIA_PROYECTO1_202004765_ANALIZADOR_H
 #include "cMkdisk.h"
+#include "StructsDatos.h"
+#include "cMkdisk.h"//Aqui esta tambien el RMDISK
+#include "CFdisk.h"
+#include "cMount.h"
 
 void analizar();
-
-
 
 #endif //MIA_PROYECTO1_202004765_ANALIZADOR_H

@@ -6,11 +6,8 @@
 #include <iostream>
 #include <string.h>
 #include <string>
-
-#include "cMkdisk.h"//Aqui esta tambien el RMDISK
-#include "CFdisk.h"
-
 #include <algorithm>
+
 
 using namespace std;
 
@@ -495,7 +492,9 @@ void comando_MOUNT(char *token){
     char path[512], name[64];
 
     if(token == NULL){//Error por si no trae ningun parametro
-        //TODO comando sin parametros muestra en consola las particiones montadas
+        cout<<"HOLAAAA" <<endl;
+        mntVER();
+        return;
     }
 
     string comandos = "";
@@ -557,7 +556,7 @@ void comando_MOUNT(char *token){
         //LLAMAR AL METODO PARA TERMINAR VERIFICACIONES Y REALIZAR LO QUE TIENE QUE HACER
         cout<<"Name: "<<name<<endl;
         cout<<"Path: "<<path<<endl;
-        //TODO MOUNT
+        cMount(path,name);
     }else{ //Notificando errores si no se ingresaron los parametros obligatorios al comando
         cout<<"Error: El comando \"MOUNT\" debe poseer el/los parámetros ";
         if(xname == false){
