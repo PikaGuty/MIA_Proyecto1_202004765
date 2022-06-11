@@ -14,8 +14,8 @@ using namespace std;
 void comando_MKDISK(char *token); //YA
 void comando_RMDISK(char *token); //YA
 void comando_FDISK(char *token); //Quitar los VER()
-void comando_MOUNT(char *token); //Corregir status logica
-void comando_UNMOUNT(char *token);
+void comando_MOUNT(char *token); //YA
+void comando_UNMOUNT(char *token); //YA
 void comando_MKFS(char *token);
 void comando_MKFILE(char *token);
 void comando_EXEC(char *token);
@@ -57,51 +57,51 @@ void analizar(){
             token = strtok(NULL, " ");
             comando_FDISK(token);
         }else if (actual=="mount"){
-            cout<<"******** Ejecutando MOUNT ********"<<endl;
+            cout<<"************************ Ejecutando MOUNT ************************"<<endl;
             token = strtok(NULL, " ");
             comando_MOUNT(token);
         }else if (actual=="unmount"){
-            cout<<"******** Ejecutando UNMOUNT ********"<<endl;
+            cout<<"************************ Ejecutando UNMOUNT ************************"<<endl;
             token = strtok(NULL, " ");
             comando_UNMOUNT(token);
         }else if (actual=="mkfs"){
-            cout<<"******** Ejecutando MKFS ********"<<endl;
+            cout<<"************************ Ejecutando MKFS ************************"<<endl;
             token = strtok(NULL, " ");
             comando_MKFS(token);
         }else if (actual=="mkfile"){
-            cout<<"******** Ejecutando MKFILE ********"<<endl;
+            cout<<"************************ Ejecutando MKFILE ************************"<<endl;
             token = strtok(NULL, " ");
             comando_MKFILE(token);
         }else if (actual=="exec"){
-            cout<<"******** Ejecutando EXEC ********"<<endl;
+            cout<<"************************ Ejecutando EXEC ************************"<<endl;
             token = strtok(NULL, " ");
             comando_EXEC(token);
         }else if (actual=="rm"){
-            cout<<"******** Ejecutando RM ********"<<endl;
+            cout<<"************************ Ejecutando RM ************************"<<endl;
             token = strtok(NULL, " ");
             comando_RM(token);
         }else if (actual=="mkdir"){
-            cout<<"******** Ejecutando MKDIR ********"<<endl;
+            cout<<"************************ Ejecutando MKDIR ************************"<<endl;
             token = strtok(NULL, " ");
             comando_MKDIR(token);
         }else if (actual=="cp"){ // TODO preguntar que tabla usar
-            cout<<"******** Ejecutando CP ********"<<endl;
+            cout<<"************************ Ejecutando CP ************************"<<endl;
             token = strtok(NULL, " ");
             comando_CP(token);
         }/*else if (actual=="ls"){ TODO preguntar que tabla usar
-            cout<<"******** Ejecutando LS ********"<<endl;
+            cout<<"************************ Ejecutando LS ************************"<<endl;
             token = strtok(NULL, " ");
             comando_LS(token);
         }*/else if (actual=="pause"){
-            cout<<"******** Ejecutando PAUSE ********"<<endl;
+            cout<<"************************ Ejecutando PAUSE ************************"<<endl;
             token = strtok(NULL, " ");
             comando_PAUSE(token);
         }else if (actual=="loss"){
-            cout<<"******** Ejecutando LOSS ********"<<endl;
+            cout<<"************************ Ejecutando LOSS ************************"<<endl;
             token = strtok(NULL, " ");
             comando_LOSS(token);
         }else if (actual=="rep"){
-            cout<<"******** Ejecutando REP ********"<<endl;
+            cout<<"************************ Ejecutando REP ************************"<<endl;
             token = strtok(NULL, " ");
             comando_REP(token);
         }
@@ -325,7 +325,6 @@ void comando_FDISK(char *token){
             xsize = true;//Indicando que ya se evaluó al ser de caracter obligatorio
             comandos.erase(0, 2 + pos);
 
-            //TODO Preguntar si en verdad es obligatorio ya que no se usa en varios ejemplo y si se coloca estaria de mas
             //PASANDO A LA VARIABLE SIZE EL DATO
             try {
                 size = stoi(comandos.substr(0, comandos.find(" ")));
@@ -460,7 +459,6 @@ void comando_FDISK(char *token){
             //cout<<"Vamo a crear"<<endl;
             cFdisk_crear(size, unit, path, type, fit, name);
         }
-        //TODO FDISK
     }else{ //Notificando errores si no se ingresaron los parametros obligatorios al comando
         cout<<"Error: El comando \"FDISK\" debe poseer el/los parámetros ";
         if(xsize == false){
@@ -672,7 +670,7 @@ void comando_MKFS(char *token){
     bool xid = false;//Obligatorios
     bool xunit = false, xtype = false, xadd = false;//Opcionales
     int add=0;
-    char id[32], unit[16]="", type[16]="";
+    char id[16], unit[16]="", type[16]="";
 
     if(token == NULL){//Error por si no trae ningun parametro
         cout<<"Error: El comando \"MKFS\" debe poseer el parámetro $id ya que es de caracter obligatorio."<<endl;
@@ -752,7 +750,8 @@ void comando_MKFS(char *token){
         cout<<"Unit: "<<unit<<endl;
         cout<<"Type: "<<type<<endl;
         cout<<"Add: "<<add<<endl;
-        //TODO MKFS
+        cMkfs(add, id, unit, type);
+
     }else{ //Notificando errores si no se ingresaron los parametros obligatorios al comando
         cout<<"Error: El comando \"MKFS\" debe poseer el parámetro ";
         if(xid == false){

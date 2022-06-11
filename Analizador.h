@@ -9,6 +9,7 @@
 #include "cMkdisk.h"//Aqui esta tambien el RMDISK
 #include "CFdisk.h"
 #include "cMount.h"
+#include "cMkfs.h"
 
 void analizar();
 
