@@ -8,6 +8,7 @@
 #include "estructuras.h"
 #include "StructsDatos.h"
 #include "metodosGenerales.h"
+#include "CFdisk.h"
 
 static char metodoDeColocacionExtendida;
 static mnt_lista* listaDeParticiones;

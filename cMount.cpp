@@ -39,12 +39,14 @@ void cMount(char ruta[512], char nombre[16]) {
 
     if (part.part_fit == 'B' || part.part_fit == 'F' || part.part_fit == 'W') {//si no hay primaria, buscar en la secundaria
         mntPush(listaDeParticiones,part, eb, ruta); //se ingresa la particion a la lista.
-        mntVER();
+        cout<<"\t...................Se ha montado la partición................"<<endl;
     } else {
-        eb = devolverLogica(ruta, nombre);
-        if (eb.part_fit == 'B' || eb.part_fit == 'F' || eb.part_fit == 'W')
-            mntPush(listaDeParticiones,part, eb, ruta);
-        else
+        eb = devLogica(ruta,nombre);
+        //eb = devolverLogica(ruta, nombre);
+        if (eb.part_fit == 'B' || eb.part_fit == 'F' || eb.part_fit == 'W') {
+            mntPush(listaDeParticiones, part, eb, ruta);
+            cout << "\t...................Se ha montado la partición................" << endl;
+        }else
             cout<<"Error: No se encontró la partición en el disco"<<endl;
     }
 
@@ -82,6 +84,7 @@ partitiond devolverParticion(char ruta[512], char nombre[16]) {
 
 }
 
+/*
 ebr devolverLogica(char ruta[512], char nombre[16]) {
     mbr B_mbr = leerMBR(ruta);
     //buscando la posicion de la partición logica
@@ -154,6 +157,7 @@ ebr devolverLogica(char ruta[512], char nombre[16]) {
     return retor;
 
 }
+*/
 
 void inicializarListaMount() {
     listaDeParticiones = (mnt_lista*) malloc(sizeof (mnt_lista)); //inicializando las listas
@@ -161,14 +165,15 @@ void inicializarListaMount() {
 }
 
 void mntVER() {
-    cout<<"HOLAAAAAAAAAA"<<endl;
     mnt_nodo* puntero = listaDeParticiones->cabeza;
     while (puntero->siguiente) {
+        cout<<puntero->mnt_ebr.part_name;
         cout<<puntero->mnt_particion.part_name<<endl;
         cout<<puntero->mnt_id<<endl;
         cout<<puntero->mnt_ruta<<endl;
         puntero = puntero->siguiente;
     }
+    cout<<puntero->mnt_ebr.part_name;
     cout<<puntero->mnt_particion.part_name<<endl;
     cout<<puntero->mnt_id<<endl;
     cout<<puntero->mnt_ruta<<endl;

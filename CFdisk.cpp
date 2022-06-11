@@ -571,6 +571,36 @@ void execFdisk_crearL(datos_crearFDISK datos, char path[512]){
 
 }
 
+ebr devLogica(char path[512], char name[64]){
+    mbr B_mbr = leerMBR(path);
+
+    partitiond particiones[4];
+    particiones[0] = B_mbr.mbr_partition_1;
+    particiones[1] = B_mbr.mbr_partition_2;
+    particiones[2] = B_mbr.mbr_partition_3;
+    particiones[3] = B_mbr.mbr_partition_4;
+
+    int i;
+    char nombre[16];
+    char nombre2[16];
+
+
+
+    ebr logic;
+    bool encLog = false;
+
+    for (int j = 0; j < 4; j++) {
+        if (particiones[j].part_type=='E') {
+            prtLogica log = buscarLogica(path,name,particiones,j);
+            encLog = log.encontrado;
+            logic = log.B_ebr;
+            break;
+        }
+    }
+
+    return logic;
+}
+
 void cFdisk_eliminar(char path[512], char delet[16], char name[64]) {
     mbr B_mbr = leerMBR(path);
     partitiond particiones[4];

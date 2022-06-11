@@ -492,7 +492,6 @@ void comando_MOUNT(char *token){
     char path[512], name[64];
 
     if(token == NULL){//Error por si no trae ningun parametro
-        cout<<"HOLAAAA" <<endl;
         mntVER();
         return;
     }

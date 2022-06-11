@@ -15,5 +15,6 @@ void cFdisk_mover(char path[512], char name[64], char mov[64]);
 void actualizarMBR(mbr nuevo, char ruta[512]);
 void cFdisk_mover(char path[512], char name[64], char mov[64]);
 prtLogica buscarLogica(char path[512], char name[64], partitiond particiones[4], int i);
+ebr devLogica(char path[512], char name[64]);
 
 #endif //MIA_PROYECTO1_202004765_CFDISK_H
