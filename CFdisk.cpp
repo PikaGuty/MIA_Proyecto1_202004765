@@ -10,6 +10,7 @@
 
 #include "estructuras.h"
 #include "StructsDatos.h"
+#include "cMount.h"
 #include "metodosGenerales.h"
 
 using namespace std;
@@ -591,6 +592,7 @@ ebr devLogica(char path[512], char name[64]){
 
     for (int j = 0; j < 4; j++) {
         if (particiones[j].part_type=='E') {
+            metodoDeColocacionExtendida = particiones[j].part_fit;
             prtLogica log = buscarLogica(path,name,particiones,j);
             encLog = log.encontrado;
             logic = log.B_ebr;

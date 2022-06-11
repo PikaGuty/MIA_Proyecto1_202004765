@@ -20,7 +20,7 @@ void cMount(char ruta[512], char nombre[16]);
 void inicializarListaMount();
 void mntVER();
 void cUnmount(string id[32]);
-
+mnt_nodo retornarNodoMount(char ids[16]);
 
 
 #endif //MIA_PROYECTO1_202004765_CMOUNT_H

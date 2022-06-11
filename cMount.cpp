@@ -452,3 +452,20 @@ void cUnmount(string id[32]){
 
     }
 }
+
+mnt_nodo retornarNodoMount(char ids[16]) {
+    mnt_lista* lista = listaDeParticiones;
+    mnt_nodo* puntero = lista->cabeza;
+    int retorno;
+
+    while (puntero) {
+        retorno = strncmp(ids, puntero->mnt_id, 16);
+        if (retorno == 0)//lo encontró
+            return *puntero;
+        puntero = puntero->siguiente;
+    }
+    cout<<"Error: No se encontró ese id"<<endl;
+    mnt_nodo re;
+    strcpy(re.mnt_ruta, "");
+    return re;
+}

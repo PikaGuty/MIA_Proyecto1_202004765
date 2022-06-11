@@ -9,6 +9,8 @@
 #include <string.h>
 #include <time.h>
 
+typedef char times[50];
+
 typedef struct{
     char part_status;
     char part_type;
@@ -36,5 +38,66 @@ typedef struct {
     int part_next;
     char part_name[16];
 } ebr;
+
+typedef struct{
+    int i_uid ;     //UID del propietario
+    int i_gid;      //GID al grupo al que pertenece
+
+    int i_size;     //tamaño del archivo en bytes
+    times i_atime;  //ultima fecha que se leyó el inodo sin modificarlo
+    times i_ctime;  //fecha en la que se creó el inodo
+    times i_mtime;  //ultima fecha en la que se modifico el inodo
+    int i_block[15];//arreglo de punteros, los prieros 12 son directos, 13 indirecto, 14 indirecto doble, 15 indirecto triple
+    char i_type;    //1 = archivo, 0 = carpeta
+}inodo;
+
+typedef struct{
+    char status;
+}bmInodo;
+
+typedef struct{
+    char status;
+}bmBloque;
+
+typedef struct{
+    int s_inodes_count;     //Guarda el número total de inodos
+    int s_blocks_count;     //Guarda el número total de bloques
+    int s_free_blocks_counts;//Contiene el número de bloques libres
+    int s_free_inodes_count;//Contiene el número de inodos libres
+    times s_mtime;          //Última fecha en el que el sistema fue montado
+    times s_unmtime;        //Última fecha en que el sistema fue desmontado
+    int s_mnt_count;        //Indica cuantas veces se ha montado el sistema
+    int s_magic;            //Valor que identifica al sistema de archivos, tendrá el valor 0xEF53
+    int s_inode_size;       //Tamaño del inodo
+    int s_block_size;       //Tamaño del bloque
+    int s_first_ino;        //Primer inodo libre
+    int s_first_blo;        //Primer bloque libre
+    int s_bm_inode_start;   //Guardará el inicio del bitmap de inodos
+    int s_bm_block_start;   //Guardará el inicio del bitmap de bloques
+    int s_inode_start;      //Guardará el inicio de la tabla de inodos
+    int s_block_start;      //Guardará el inico de la tabla de bloques
+    int s_bjpurfree;        //El padre
+}superBloque;
+
+typedef struct{
+    char b_content[64];
+}bloqueArchivo;
+
+typedef struct{
+    char b_name[12];
+    int b_inodo;
+}content;
+
+typedef struct{
+    content b_content[4];
+}bloqueCarpeta;
+
+typedef struct{
+    char journal_tipo;
+    char journal_nombre[16];
+    char journal_contenido;
+    times journal_fecha;
+    char Padre[12];
+}journalie;
 
 #endif //MIA_PROYECTO1_202004765_ESTRUCTURAS_H

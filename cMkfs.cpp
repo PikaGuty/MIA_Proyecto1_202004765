@@ -5,22 +5,269 @@
 #include "cMkfs.h"
 #include <string.h>
 
+#include "StructsDatos.h"
+#include "cMount.h"
+
 using namespace std;
 
+void crear_ext3(mnt_nodo mountNodo, int n, int inicioParticion);
+superBloque sb_inicializar(int n, times tiempo, int inicio);
+void sb_escribir(char ruta[512], int inicio, superBloque sb);
+void jr_escribir(int inicio, int n, char ruta[512], journalie aux[]);
+void bmb_leer(int inicio, int n, char ruta[512], bmBloque *aux);
+void bmb_escribir(int inicio, int n, char ruta[512], bmBloque aux[]);
+void bmi_escribir(int inicio, int n, char ruta[512], bmInodo aux[]);
+void inodos_escribir(int inicio, int n, char ruta[512], inodo aux[]);
+
 void cMkfs(int add, char id[16], char unitt[16], char type[16]){
-    cout<<"Del otro lado"<<endl;
-    cout<<"Id: "<<id<<endl;
-    cout<<"Unit: "<<unit<<endl;
-    cout<<"Type: "<<type<<endl;
-    cout<<"Add: "<<add<<endl;
 
-    char *unit;
-    strcpy(unit,unitt);
+    char unit;
+    string uni = unitt;
+    if (uni == " ")//por si no viene unidad
+        add = add * 1024;
+    else{
+        if (uni == "B" || uni == "b")
+            add = add;
+        else if (uni == "K" || uni == "k")
+            add = add * 1024;
+        else if (uni == "M" || uni == "m")
+            add = add * 1024 * 1024;
+    }
 
-    if (unit == ' ')//por si no viene unidad
-        unit = 'k';
-    int retorno = 1;
-    retorno = strncmp(type, "", 16);
-    if (retorno == 0)
+
+    if (strncmp(type, "", 16) == 0)
         strcpy(type, "full");
+
+    if (add != 0) {
+        cout<<"Agregar o restar"<<endl;
+    } else {//formatear normal
+        mnt_nodo particion = retornarNodoMount(id);
+        if (strncmp(particion.mnt_ruta, "", 512) == 0)
+            return;
+
+        int part_inicio = 0;
+        int part_tamano = 0;
+        char part_colocacion = ' ';
+        int pimerEspacioEBR = 0;
+
+        if (particion.mnt_particion.part_fit == 'B' || particion.mnt_particion.part_fit == 'F' || particion.mnt_particion.part_fit == 'W') {//es primaria
+            part_inicio = particion.mnt_particion.part_start;
+            part_tamano = particion.mnt_particion.part_size;
+            part_colocacion = particion.mnt_particion.part_type;
+            pimerEspacioEBR = 0;
+        } else {//Si es el ebr
+            part_inicio = particion.mnt_ebr.part_start;
+            part_tamano = particion.mnt_ebr.part_size;
+            part_colocacion = metodoDeColocacionExtendida;
+            pimerEspacioEBR = sizeof (ebr);
+        }
+
+        double partta = (double) part_tamano;
+        double nu;
+        nu = (partta - sizeof (superBloque)) / (4.0 + 3.0 * 64.0 + sizeof (inodo) + sizeof (journalie));
+        printf("\tSuperBloque=%i| Inodo = %i|Journalie=%i\n", sizeof (superBloque), sizeof (inodo), sizeof (journalie));
+        cout<<"SuperBloque = "<<sizeof (superBloque)<<"| Inodo = "<<sizeof (inodo)<<"|Journalie = "<<sizeof (journalie)<<endl;
+        cout<<"Tamaño de la partición = "<< part_tamano<<endl;
+        cout<<"N en double = "<< nu<<endl;
+        int n = (int) nu;
+        cout<<"N en entero = "<< nu<<endl;
+        int disk = sizeof (superBloque) + n + n * sizeof (journalie) + 3 * n + n * sizeof (inodo) + 3 * n * sizeof (bloqueCarpeta);
+        cout<<"Tamaño de formato es = "<<disk<<endl;
+
+        crear_ext3(particion, n, part_inicio + pimerEspacioEBR); //creando los sectores, super bloque, inodos
+
+        //luego tengo que crear la raíz por que si no voy a pisar
+
+    }
+}
+
+void crear_ext3(mnt_nodo mountNodo, int n, int inicioParticion) {
+
+    superBloque sb = sb_inicializar(n, mountNodo.tiempo, inicioParticion);
+    sb_escribir(mountNodo.mnt_ruta, inicioParticion, sb); //Escribiendo el super bloque
+
+    journalie jr[n]; //arreglo de journalie
+    jr_escribir(inicioParticion + sizeof (superBloque), n, mountNodo.mnt_ruta, jr); //Journaling
+
+    //Bitmap de bloques
+    bmBloque agrregloBmb[n * 3];
+    bmBloque bmb;
+    bmb.status = '0';
+    int u;
+    for (u = 0; u < 3 * n; u++) {
+        agrregloBmb[u] = bmb;
+    }
+    bmb_escribir(sb.s_bm_block_start, n, mountNodo.mnt_ruta, agrregloBmb);
+
+    //Bit map de inodos
+    bmInodo bmi[n];
+    bmInodo bm;
+    bm.status = '0';
+    int l;
+    for (l = 0; l < n; l++) {
+        bmi[l] = bm;
+    }
+    bmi_escribir(sb.s_bm_inode_start, n, mountNodo.mnt_ruta, bmi);
+
+
+    // inodos
+    inodo agrregloInodo[n];
+    inodo ino;
+    int t;
+    for (t = 0; t < n; t++) {
+        ino.i_uid = t;
+        agrregloInodo[t] = ino;
+    }
+    cout<<""<<endl;
+    inodos_escribir(sb.s_inode_start, n, mountNodo.mnt_ruta, agrregloInodo);
+}
+
+superBloque sb_inicializar(int n, times tiempo, int inicio) {//inicializo las variables del superbloque
+
+    cout<<"Inicio en = "<<inicio<<endl;
+    superBloque sb;
+
+    sb.s_inodes_count = n;
+    sb.s_blocks_count = 3 * n;
+
+    sb.s_free_blocks_counts = n;
+    sb.s_free_inodes_count = 3 * n;
+
+    strcpy(sb.s_mtime, tiempo);
+    strcpy(sb.s_unmtime, tiempo);
+
+    sb.s_mnt_count;
+    sb.s_magic = -1;
+
+    sb.s_inode_size = sizeof (inodo);
+    sb.s_block_size = sizeof (bloqueArchivo);
+
+    sb.s_first_ino = inicio + sizeof (superBloque) + 3 * n * sizeof (journalie) + 3 * n + n; //esta es la primer posicion y ya se agrego el +1 //primer inodo libre
+    sb.s_first_blo = sb.s_first_ino + n * sizeof (inodo); //primer bloque libre
+
+    sb.s_bm_inode_start = inicio + sizeof (superBloque) + 3 * n * sizeof (journalie);
+    sb.s_bm_block_start = sb.s_bm_inode_start + n;
+
+    sb.s_inode_start = inicio + sizeof (superBloque) + 3 * n * sizeof (journalie) + 3 * n + n;
+    sb.s_block_start = sb.s_inode_start + n * sizeof (inodo);
+    sb.s_bjpurfree = inicio + sizeof (superBloque);
+    return sb;
+}
+void sb_escribir(char ruta[512], int inicio, superBloque sb) { //TODO AGREGAR RAID
+    FILE *f;
+    if ((f = fopen(ruta, "r+b")) == NULL) {
+        cout<<"Error: no se pudo abrir el disco!"<<endl;
+    } else {
+
+        fseek(f, inicio, SEEK_SET);
+        fwrite(&sb, sizeof (superBloque), 1, f);
+        fclose(f);
+    }
+
+}
+superBloque sb_retornar(char id[16]) {
+    superBloque sb;
+    mnt_nodo particion = retornarNodoMount(id);
+
+    ////////los datos necesarios
+    int part_inicio = 0;
+    int part_tamano = 0;
+    char part_colocacion = ' ';
+
+    int tamanoEBR = 0;
+    if (particion.mnt_particion.part_fit == 'b' || particion.mnt_particion.part_fit == 'f' || particion.mnt_particion.part_fit == 'w') {//es primaria
+        part_inicio = particion.mnt_particion.part_start;
+        part_tamano = particion.mnt_particion.part_size;
+        part_colocacion = particion.mnt_particion.part_type;
+        tamanoEBR = 0;
+    } else {//del ebr
+        part_inicio = particion.mnt_ebr.part_start;
+        part_tamano = particion.mnt_ebr.part_size;
+        part_colocacion = metodoDeColocacionExtendida;
+        tamanoEBR = sizeof (ebr);
+    }
+    //hay que abirir el archivo
+    FILE *f; //TODO Agregar RAID
+    if ((f = fopen(particion.mnt_ruta, "r+b")) == NULL) {
+        printf("\t[ERROR]error al abrir el disco!\n");
+    } else {
+
+        fseek(f, part_inicio + tamanoEBR, SEEK_SET);
+        fread(&sb, sizeof (superBloque), 1, f);
+        fclose(f);
+    }
+
+    return sb;
+
+}
+
+void jr_escribir(int inicio, int n, char ruta[512], journalie aux[]) { //TODO AGREGAR RAID
+    FILE *f;
+    if ((f = fopen(ruta, "r+b")) == NULL) {
+        cout<<"Error: no se pudo abrir el disco!"<<endl;
+    } else {
+        int j;
+        for (j = 0; j < 3 * n + 1; j++) {
+            fseek(f, inicio + j * (sizeof (journalie)), SEEK_SET);
+            fwrite(&aux[j], sizeof (journalie), 1, f);
+        }
+        fclose(f);
+    }
+}
+
+void bmb_escribir(int inicio, int n, char ruta[512], bmBloque aux[]) { //TODO AGREGAR RAID
+    FILE *f;
+    if ((f = fopen(ruta, "r+b")) == NULL) {
+        cout<<"Error: no se pudo abrir el disco!"<<endl;
+    } else {
+        int j;
+        for (j = 0; j < n * 3; j++) {
+            fseek(f, inicio + j * (sizeof (bmBloque)), SEEK_SET);
+            fwrite(&aux[j], sizeof (bmBloque), 1, f);
+        }
+        fclose(f);
+    }
+}
+
+void bmb_leer(int inicio, int n, char ruta[512], bmBloque *aux) { //TODO AGREGAR RAID
+    FILE *f;
+    if ((f = fopen(ruta, "r+b")) == NULL) {
+        cout<<"Error: no se pudo abrir el disco!"<<endl;
+    } else {
+        int j;
+        for (j = 0; j < n * 3; j++) {
+            fseek(f, inicio + j * (sizeof (bmBloque)), SEEK_SET);
+            fread(&aux[j], sizeof (bmBloque), 1, f);
+        }
+        fclose(f);
+    }
+}
+
+void bmi_escribir(int inicio, int n, char ruta[512], bmInodo aux[]) { //TODO AGREGAR RAID
+    FILE *f;
+    if ((f = fopen(ruta, "r+b")) == NULL) {
+        cout<<"Error: no se pudo abrir el disco!"<<endl;
+    } else {
+        int j;
+        for (j = 0; j < n; j++) {
+            fseek(f, inicio + j * (sizeof (bmInodo)), SEEK_SET);
+            //bmInodo aux2 = aux[j];
+            fwrite(&aux[j], sizeof (bmInodo), 1, f);
+        }
+        fclose(f);
+    }
+}
+
+void inodos_escribir(int inicio, int n, char ruta[512], inodo aux[]) { //TODO AGREGAR RAID
+    FILE *f;
+    if ((f = fopen(ruta, "r+b")) == NULL) {
+        cout<<"Error: no se pudo abrir el disco!"<<endl;
+    } else {
+        int j;
+        for (j = 0; j < n; j++) {
+            fseek(f, inicio + j * (sizeof (inodo)), SEEK_SET);
+            fwrite(&aux[j], sizeof (inodo), 1, f);
+        }
+        fclose(f);
+    }
 }
