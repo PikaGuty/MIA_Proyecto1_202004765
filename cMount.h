@@ -9,6 +9,9 @@
 #include "StructsDatos.h"
 #include "metodosGenerales.h"
 #include "CFdisk.h"
+#include <string.h>
+
+using namespace std;
 
 static char metodoDeColocacionExtendida;
 static mnt_lista* listaDeParticiones;
@@ -16,6 +19,7 @@ static mnt_lista* listaDeParticiones;
 void cMount(char ruta[512], char nombre[16]);
 void inicializarListaMount();
 void mntVER();
+void cUnmount(string id[32]);
 
 
 

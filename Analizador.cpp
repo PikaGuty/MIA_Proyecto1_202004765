@@ -11,10 +11,10 @@
 
 using namespace std;
 
-void comando_MKDISK(char *token);
-void comando_RMDISK(char *token);
-void comando_FDISK(char *token);
-void comando_MOUNT(char *token);
+void comando_MKDISK(char *token); //YA
+void comando_RMDISK(char *token); //YA
+void comando_FDISK(char *token); //Quitar los VER()
+void comando_MOUNT(char *token); //Corregir status logica
 void comando_UNMOUNT(char *token);
 void comando_MKFS(char *token);
 void comando_MKFILE(char *token);
@@ -632,6 +632,7 @@ void comando_UNMOUNT(char *token){
             //PASANDO A LA VARIABLE NAME EL DATO
             id[cont]=comandos.substr(0, comandos.find(" "));
 
+
             pos = comandos.find(" ");
             comandos.erase(0, 1 + pos);
         }else{
@@ -652,12 +653,12 @@ void comando_UNMOUNT(char *token){
     if(xid == true){//Se puede ejecutar el comando
         //LLAMAR AL METODO PARA TERMINAR VERIFICACIONES Y REALIZAR LO QUE TIENE QUE HACER
         cout<<"ID: "<<endl;
-        for (int i = 0; i < sizeof(id); ++i) {
+        for (int i = 0; i < 32; i++) {
             if(id[i]!=""){
                 cout<<id[i]<<endl;
             }
         }
-        //TODO UNMOUNT
+        cUnmount(id);
     }else{ //Notificando errores si no se ingresaron los parametros obligatorios al comando
         cout<<"Error: El comando \"UNMOUNT\" debe poseer el/los parámetros ";
        if(xid == false){

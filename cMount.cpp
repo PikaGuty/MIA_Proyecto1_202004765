@@ -22,6 +22,7 @@ ebr devolverLogica(char ruta[512], char nombre[16]);
 mnt_nodo* mntCrearNodo(partitiond particion, ebr logica, char ruta[512]);
 char letraDeDisco(mnt_lista*lista, char ruta[512]);
 char numeroDeDisco(mnt_lista*lista, char letra);
+void actualizarStatus(char path[512], char name[16], char status);
 
 const string fecha(time_t now) {
     struct tm  tstruct;
@@ -35,16 +36,24 @@ const string fecha(time_t now) {
 void cMount(char ruta[512], char nombre[16]) {
     partitiond part = devolverParticion(ruta, nombre); //si se econtro en primaria o secundaria
     ebr eb;
+    eb.part_fit='\0';
+    strcpy(eb.part_name,"");
+    eb.part_status=0;
+    eb.part_size=0;
+    eb.part_start=0;
+
     cout<<"Montando "<<endl;
 
     if (part.part_fit == 'B' || part.part_fit == 'F' || part.part_fit == 'W') {//si no hay primaria, buscar en la secundaria
         mntPush(listaDeParticiones,part, eb, ruta); //se ingresa la particion a la lista.
+        actualizarStatus(ruta, nombre, '1');
         cout<<"\t...................Se ha montado la partición................"<<endl;
     } else {
         eb = devLogica(ruta,nombre);
         //eb = devolverLogica(ruta, nombre);
         if (eb.part_fit == 'B' || eb.part_fit == 'F' || eb.part_fit == 'W') {
             mntPush(listaDeParticiones, part, eb, ruta);
+            actualizarStatus(ruta, nombre, '1');
             cout << "\t...................Se ha montado la partición................" << endl;
         }else
             cout<<"Error: No se encontró la partición en el disco"<<endl;
@@ -165,18 +174,27 @@ void inicializarListaMount() {
 }
 
 void mntVER() {
-    mnt_nodo* puntero = listaDeParticiones->cabeza;
-    while (puntero->siguiente) {
+    if(listaDeParticiones->cabeza!=NULL){
+        mnt_nodo* puntero = listaDeParticiones->cabeza;
+        while (puntero->siguiente) {
+            cout<<puntero->mnt_ebr.part_name;
+            cout<<puntero->mnt_particion.part_name<<endl;
+            cout<<puntero->mnt_id<<endl;
+            cout<<puntero->mnt_ruta<<endl;
+            cout<<"  *"<<endl;
+            cout<<"  *"<<endl;
+            cout<<" ***"<<endl;
+            cout<<"  *"<<endl;
+            puntero = puntero->siguiente;
+        }
         cout<<puntero->mnt_ebr.part_name;
         cout<<puntero->mnt_particion.part_name<<endl;
         cout<<puntero->mnt_id<<endl;
         cout<<puntero->mnt_ruta<<endl;
-        puntero = puntero->siguiente;
+    }else{
+        cout<<"No hay particiones montadas"<<endl;
     }
-    cout<<puntero->mnt_ebr.part_name;
-    cout<<puntero->mnt_particion.part_name<<endl;
-    cout<<puntero->mnt_id<<endl;
-    cout<<puntero->mnt_ruta<<endl;
+
 }
 
 void mntPush(mnt_lista* lista, partitiond particion, ebr logica, char ruta[512]) {
@@ -193,7 +211,6 @@ void mntPush(mnt_lista* lista, partitiond particion, ebr logica, char ruta[512])
         puntero->siguiente = nodo;
     }
 }
-
 
 mnt_nodo* mntCrearNodo(partitiond particion, ebr logica, char ruta[512]) {
     mnt_nodo* nodo = (mnt_nodo*) malloc(sizeof (mnt_nodo));
@@ -271,4 +288,167 @@ char numeroDeDisco(mnt_lista*lista, char letra) {
         return letraTemporal + 1;
     }
 
+}
+
+void actualizarStatus(char path[512], char name[16], char status){
+    mbr B_mbr = leerMBR(path);
+    partitiond particiones[4];
+    particiones[0] = B_mbr.mbr_partition_1;
+    particiones[1] = B_mbr.mbr_partition_2;
+    particiones[2] = B_mbr.mbr_partition_3;
+    particiones[3] = B_mbr.mbr_partition_4;
+
+    int i;
+    char nombre[16];
+    char nombre2[16];
+
+    bool encontrado = false;
+    for (i = 0; i < 4; i++) {
+        strcpy(nombre, particiones[i].part_name);
+        strcpy(nombre2, name);
+
+        if (strncmp(nombre2, nombre, 16) == 0) {
+            encontrado = true;
+            break;
+        }
+    }
+
+    ebr logic;
+    bool encLog = false;
+
+    if(encontrado==false){
+        for (int j = 0; j < 4; j++) {
+            if (particiones[j].part_type=='E') {
+                prtLogica log = buscarLogica(path,name,particiones,j);
+                encLog = log.encontrado;
+                logic = log.B_ebr;
+                break;
+            }
+        }
+    }
+
+
+    char nombreAnterior[16];
+    strcpy(nombreAnterior,logic.part_name);
+
+    string auxf = path;
+    size_t pos = 0;
+    string res = "";
+    while ((pos = auxf.find("/")) != string::npos) {
+        res += auxf.substr(0, pos) + "/";
+        auxf.erase(0, pos + 1);
+    }
+
+    string nombree = "";
+    pos = auxf.find(".");
+    nombree += auxf.substr(0, pos);
+    auxf.erase(0, pos + 1);
+
+    char ruta2[512] = "";
+    strcpy(ruta2, res.c_str());
+    strcat(ruta2, nombree.c_str());
+    strcat(ruta2, "_rd.dsk");
+
+
+    if (encontrado == true) {
+        cout << "Actualizando Status de la partición " << i + 1 << ", Nombre: " << particiones[i].part_name << endl;
+
+        if(particiones[i].part_type=='P'){
+            particiones[i].part_status = status;
+        }
+
+        if (i == 0) {
+            B_mbr.mbr_partition_1 = particiones[i];
+        } else if (i == 1){
+            B_mbr.mbr_partition_2 = particiones[i];
+        } else if (i == 2){
+            B_mbr.mbr_partition_3 = particiones[i];
+        }else if (i == 3) {
+            B_mbr.mbr_partition_4 = particiones[i];
+        }
+        actualizarMBR(B_mbr, path);
+    }else if (encLog == true) {
+        cout << "Actualizando la Particion Lógica, Nombre: " << logic.part_name << endl;
+        //cout<<"LOGIC "<<logic.part_status<<endl;
+        logic.part_status=status;
+        //cout<<logic.part_name<<" LOGIC "<<logic.part_status<<endl;
+        FILE *f;
+        if ((f = fopen(path, "r+b")) == NULL) {
+
+        }else{
+            fseek(f, logic.part_start, SEEK_SET);
+            fwrite(&logic, sizeof (logic), 1, f);
+        }
+        if ((f = fopen(ruta2, "r+b")) == NULL) {
+
+        }else{
+            fseek(f, logic.part_start, SEEK_SET);
+            fwrite(&logic, sizeof (logic), 1, f);
+        }
+        fclose(f);
+    }else{
+        cout << "Error: no se encontró la partición: "<<name<<endl;
+    }
+}
+
+void cUnmount(string id[32]){
+    for (int i = 0; i < 32; ++i) {
+        if(id[i]!=""){
+            char identificador[16];
+            strcpy(identificador,id[i].c_str());
+            //cout<<"RECIBO "<<identificador<<endl;
+            mnt_nodo* puntero = listaDeParticiones->cabeza;
+            mnt_nodo* pAnterior = NULL;
+            bool entro= false;
+            while (puntero->siguiente) {
+                if(strncmp(puntero->mnt_id,identificador,16)==0){
+                    if(pAnterior==NULL){
+                        //cout<<"Es el primero"<<endl;
+
+                        listaDeParticiones->cabeza = puntero->siguiente;
+                        if(puntero->mnt_ebr.part_start!=0){
+                            actualizarStatus(puntero->mnt_ruta,puntero->mnt_ebr.part_name,'0');
+                        } else{
+                            actualizarStatus(puntero->mnt_ruta,puntero->mnt_particion.part_name,'0');
+                        }
+
+                        entro=true;
+                    }else{
+                        //cout<<"Es de enmedio"<<endl;
+                        pAnterior->siguiente=puntero->siguiente;
+                        if(puntero->mnt_ebr.part_start!=0){
+                            actualizarStatus(puntero->mnt_ruta,puntero->mnt_ebr.part_name,'0');
+                        } else{
+                            actualizarStatus(puntero->mnt_ruta,puntero->mnt_particion.part_name,'0');
+                        }
+
+                        entro=true;
+                    }
+                }
+                pAnterior = puntero;
+                puntero = puntero->siguiente;
+            }
+            if(entro==false){
+                //cout<<"Es del final"<<endl;
+                if(puntero->siguiente){
+                    pAnterior->siguiente=NULL;
+                    if(puntero->mnt_ebr.part_start!=0){
+                        actualizarStatus(puntero->mnt_ruta,puntero->mnt_ebr.part_name,'0');
+                    } else{
+                        actualizarStatus(puntero->mnt_ruta,puntero->mnt_particion.part_name,'0');
+                    }
+                }else{
+                    listaDeParticiones->cabeza = NULL;
+                    if(puntero->mnt_ebr.part_start!=0){
+                        actualizarStatus(puntero->mnt_ruta,puntero->mnt_ebr.part_name,'0');
+                    } else{
+                        actualizarStatus(puntero->mnt_ruta,puntero->mnt_particion.part_name,'0');
+                    }
+                }
+
+            }
+
+        }
+
+    }
 }

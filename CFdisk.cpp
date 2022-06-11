@@ -661,12 +661,50 @@ void cFdisk_eliminar(char path[512], char delet[16], char name[64]) {
 
 
     if (encontrado == true) {
-        cout << "Eliminando la Particion " << i + 1 << ", Nombre: " << particiones[i].part_name << endl;
+        if(particiones[i].part_status=='0'){
+            cout << "Eliminando la Particion " << i + 1 << ", Nombre: " << particiones[i].part_name << endl;
 
-        if (strncmp("fast", delet, sizeof("fast")) == 0) {
-            cout << "Tipo = fast, size " << particiones[i].part_size << endl;
+            if (strncmp("fast", delet, sizeof("fast")) == 0) {
+                cout << "Tipo = fast, size " << particiones[i].part_size << endl;
 
-            if(particiones[i].part_type=='E'){
+                if(particiones[i].part_type=='E'){
+
+                    FILE *f;
+                    if ((f = fopen(path, "r+b")) == NULL) {
+                        if ((f = fopen(ruta2, "r+b")) == NULL) {
+                            cout << "Error: no se ha podido al abrir el disco!\n";
+                        } else {
+                            fseek(f, particiones[i].part_start, SEEK_SET);
+                            //llenando los espacios en blanco
+                            char vacio = '\0';
+                            int i = 0;
+                            for (i = 0; i < particiones[i].part_size; i++) {
+                                fwrite(&vacio, 1, 1, f);
+                            }
+                            fclose(f);
+                        }
+                    } else {
+                        fseek(f, particiones[i].part_start, SEEK_SET);
+                        //llenando los espacios en blanco
+                        char vacio = '\0';
+                        int i = 0;
+                        for (i = 0; i < particiones[i].part_size; i++) {
+                            fwrite(&vacio, 1, 1, f);
+                        }
+                        fclose(f);
+                    }
+                    cout << "Eliminando particiones logicas de la extendida : " << particiones[i].part_name << endl;
+                }
+
+                particiones[i].part_size = 0;
+                particiones[i].part_start = 0;
+                particiones[i].part_fit = '\0';
+                strcpy(particiones[i].part_name, "");
+                particiones[i].part_status = '0';
+                particiones[i].part_type = '\0';
+
+            } else {
+                cout << "Tipo =full, size " << particiones[i].part_size << endl;
 
                 FILE *f;
                 if ((f = fopen(path, "r+b")) == NULL) {
@@ -692,82 +730,60 @@ void cFdisk_eliminar(char path[512], char delet[16], char name[64]) {
                     }
                     fclose(f);
                 }
-                cout << "Eliminando particiones logicas de la extendida : " << particiones[i].part_name << endl;
+
+                particiones[i].part_size = 0;
+                particiones[i].part_start = 0;
+                particiones[i].part_fit = '\0';
+                strcpy(particiones[i].part_name, "");
+                particiones[i].part_status = '0';
+                particiones[i].part_type = '\0';
+
             }
 
-            particiones[i].part_size = 0;
-            particiones[i].part_start = 0;
-            particiones[i].part_fit = '\0';
-            strcpy(particiones[i].part_name, "");
-            particiones[i].part_status = '0';
-            particiones[i].part_type = '\0';
-
-        } else {
-            cout << "Tipo =full, size " << particiones[i].part_size << endl;
-
-            FILE *f;
-            if ((f = fopen(path, "r+b")) == NULL) {
-                if ((f = fopen(ruta2, "r+b")) == NULL) {
-                    cout << "Error: no se ha podido al abrir el disco!\n";
-                } else {
-                    fseek(f, particiones[i].part_start, SEEK_SET);
-                    //llenando los espacios en blanco
-                    char vacio = '\0';
-                    int i = 0;
-                    for (i = 0; i < particiones[i].part_size; i++) {
-                        fwrite(&vacio, 1, 1, f);
-                    }
-                    fclose(f);
-                }
-            } else {
-                fseek(f, particiones[i].part_start, SEEK_SET);
-                //llenando los espacios en blanco
-                char vacio = '\0';
-                int i = 0;
-                for (i = 0; i < particiones[i].part_size; i++) {
-                    fwrite(&vacio, 1, 1, f);
-                }
-                fclose(f);
+            if (i == 0) {
+                B_mbr.mbr_partition_1 = particiones[i];
+            } else if (i == 1){
+                B_mbr.mbr_partition_2 = particiones[i];
+            } else if (i == 2){
+                B_mbr.mbr_partition_3 = particiones[i];
+            }else if (i == 3) {
+                B_mbr.mbr_partition_4 = particiones[i];
             }
-
-            particiones[i].part_size = 0;
-            particiones[i].part_start = 0;
-            particiones[i].part_fit = '\0';
-            strcpy(particiones[i].part_name, "");
-            particiones[i].part_status = '0';
-            particiones[i].part_type = '\0';
-
+            actualizarMBR(B_mbr, path);
+        }else{
+            cout<<"Error: debe desmontar la partición para poder eliminarla"<<endl;
         }
 
-        if (i == 0) {
-            B_mbr.mbr_partition_1 = particiones[i];
-        } else if (i == 1){
-            B_mbr.mbr_partition_2 = particiones[i];
-        } else if (i == 2){
-            B_mbr.mbr_partition_3 = particiones[i];
-        }else if (i == 3) {
-            B_mbr.mbr_partition_4 = particiones[i];
-        }
-        actualizarMBR(B_mbr, path);
     }else if (encLog == true) {
         cout << "Eliminando la Particion Lógica, Nombre: " << logic.part_name << endl;
 
-        if (strncmp("fast", delet, sizeof("fast")) == 0) {
-            cout << "Tipo = fast, size " << logic.part_size << endl;
+        if(particiones[i].part_status=='0') {
+            if (strncmp("fast", delet, sizeof("fast")) == 0) {
+                cout << "Tipo = fast, size " << logic.part_size << endl;
 
-            logic.part_fit='\0';
-            logic.part_start=0;
-            strcpy(logic.part_name, "");
-            logic.part_size=0;
-            logic.part_status='0';
+                logic.part_fit = '\0';
+                logic.part_start = 0;
+                strcpy(logic.part_name, "");
+                logic.part_size = 0;
+                logic.part_status = '0';
 
-        } else {
-            cout << "Tipo =full, size " << logic.part_size << endl;
+            } else {
+                cout << "Tipo =full, size " << logic.part_size << endl;
 
-            FILE *f;
-            if ((f = fopen(path, "r+b")) == NULL) {
-                if ((f = fopen(ruta2, "r+b")) == NULL) {
-                    cout << "Error: no se ha podido al abrir el disco!\n";
+                FILE *f;
+                if ((f = fopen(path, "r+b")) == NULL) {
+                    if ((f = fopen(ruta2, "r+b")) == NULL) {
+                        cout << "Error: no se ha podido al abrir el disco!\n";
+                    } else {
+                        fseek(f, logic.part_start, SEEK_SET);
+                        //llenando los espacios en blanco
+                        char vacio = '\0';
+                        int i = 0;
+                        for (i = 0; i < logic.part_size; i++) {
+                            fwrite(&vacio, 1, 1, f);
+                        }
+                        fclose(f);
+                    }
                 } else {
                     fseek(f, logic.part_start, SEEK_SET);
                     //llenando los espacios en blanco
@@ -778,33 +794,25 @@ void cFdisk_eliminar(char path[512], char delet[16], char name[64]) {
                     }
                     fclose(f);
                 }
-            } else {
-                fseek(f, logic.part_start, SEEK_SET);
-                //llenando los espacios en blanco
-                char vacio = '\0';
-                int i = 0;
-                for (i = 0; i < logic.part_size; i++) {
-                    fwrite(&vacio, 1, 1, f);
-                }
-                fclose(f);
+
+                logic.part_fit = '\0';
+                logic.part_start = 0;
+                strcpy(logic.part_name, "");
+                logic.part_size = 0;
+                logic.part_status = '0';
+
             }
-
-            logic.part_fit='\0';
-            logic.part_start=0;
-            strcpy(logic.part_name, "");
-            logic.part_size=0;
-            logic.part_status='0';
-
+        }else{
+            cout<<"Error: debe desmontar la partición para poder eliminarla"<<endl;
         }
 
-        actualizarLogica(path,name,logic);
     }else{
         cout << "Error: no se encontró la partición: "<<name<<endl;
     }
     fdVER(path);
 }
 
-void actualizarLogica(char path[512], char name[16], ebr logica){
+void actLogica(char path[512], char name[16], ebr logica){
     mbr retorno = leerMBR(path);
 
     partitiond particiones[4];
@@ -830,7 +838,10 @@ void actualizarLogica(char path[512], char name[16], ebr logica){
     int tamanoDiponible = 0;
 
     if(hayExt==true) {
-        cout<<"La partición extendida es la "<<(i+1)<<"del disco "<<endl;
+        int inicio = particiones[i].part_start;
+        int tamano = particiones[i].part_size;
+        int tamanoDiponible = inicio + tamano;
+        //cout<<"La partición extendida es la "<<(i+1)<<"del disco "<<endl;
         tamanoDiponible = inicio + tamano; //No es el espacio disponible en si, si no el ultimo byte de la partición extendida
 
         string auxf = path;
@@ -862,8 +873,9 @@ void actualizarLogica(char path[512], char name[16], ebr logica){
                 fread(&B_ebr, sizeof (ebr), 1, f);
                 if (B_ebr.part_fit == 'B' || B_ebr.part_fit == 'F' || B_ebr.part_fit == 'W') {
                     ebr anterior;
-                    if(B_ebr.part_name==logica.part_name){
-                        cout<<"la encontre"<<logica.part_name<<endl;
+                    if(strcmp(B_ebr.part_name,logica.part_name) == 0){
+                        fseek(f, logica.part_start, SEEK_SET);
+                        fwrite(&logica, sizeof (ebr), 1, f);
                         return;
                     }
                     anterior = B_ebr;
@@ -875,8 +887,9 @@ void actualizarLogica(char path[512], char name[16], ebr logica){
                         fread(&aux, sizeof (ebr), 1, f);
 
                         if (aux.part_fit == 'B' || aux.part_fit == 'F' || aux.part_fit == 'W') { //Hay siguiente
-                            if(B_ebr.part_name==logica.part_name){
-                                cout<<"la encontre"<<logica.part_name<<endl;
+                            if(strcmp(B_ebr.part_name,logica.part_name) == 0){
+                                fseek(f, logica.part_start, SEEK_SET);
+                                fwrite(&logica, sizeof (ebr), 1, f);
                                 return;
                             }
                             siguiente = aux.part_next;
@@ -896,8 +909,9 @@ void actualizarLogica(char path[512], char name[16], ebr logica){
             fread(&B_ebr, sizeof (ebr), 1, f);
             if (B_ebr.part_fit == 'B' || B_ebr.part_fit == 'F' || B_ebr.part_fit == 'W') {
                 ebr anterior;
-                if(B_ebr.part_name==logica.part_name){
-                    cout<<"la encontre"<<logica.part_name<<endl;
+                if(strcmp(B_ebr.part_name,logica.part_name) == 0){
+                    fseek(f, logica.part_start, SEEK_SET);
+                    fwrite(&logica, sizeof (ebr), 1, f);
                     return;
                 }
                 anterior = B_ebr;
@@ -909,8 +923,9 @@ void actualizarLogica(char path[512], char name[16], ebr logica){
                     fread(&aux, sizeof (ebr), 1, f);
 
                     if (aux.part_fit == 'B' || aux.part_fit == 'F' || aux.part_fit == 'W') { //Hay siguiente
-                        if(B_ebr.part_name==logica.part_name){
-                            cout<<"la encontre"<<logica.part_name<<endl;
+                        if(strcmp(B_ebr.part_name,logica.part_name) == 0){
+                            fseek(f, logica.part_start, SEEK_SET);
+                            fwrite(&logica, sizeof (ebr), 1, f);
                             return;
                         }
                         siguiente = aux.part_next;
@@ -927,6 +942,44 @@ void actualizarLogica(char path[512], char name[16], ebr logica){
         cout<<"Error: No se encontró ninguna partición extendida en el disco"<<endl;
         return;
     }
+}
+
+void actualizarLogica(char path[512], ebr logica){
+        string auxf = path;
+        size_t pos = 0;
+        string res = "";
+        while((pos = auxf.find("/"))!=string::npos){
+            res += auxf.substr(0,pos)+"/";
+            auxf.erase(0,pos + 1);
+        }
+
+        string nombre = "";
+        pos = auxf.find(".");
+        nombre += auxf.substr(0,pos);
+        auxf.erase(0,pos + 1);
+
+        char ruta2[512]="";
+        strcpy(ruta2,res.c_str());
+        strcat(ruta2,nombre.c_str());
+        strcat(ruta2,"_rd.dsk");
+
+        FILE *f;
+        if ((f = fopen(path, "r+b")) == NULL) {
+
+        }else{
+            ebr B_ebr;
+            fseek(f, logica.part_start, SEEK_SET);
+            fwrite(&logica, sizeof (logica), 1, f);
+        }
+        if ((f = fopen(ruta2, "r+b")) == NULL) {
+
+        }else{
+            ebr B_ebr;
+
+            fseek(f, logica.part_start, SEEK_SET);
+            fwrite(&logica, sizeof (logica), 1, f);
+        }
+        fclose(f);
 }
 
 prtLogica buscarLogica(char path[512], char name[64], partitiond particiones[4], int i) {
@@ -1325,6 +1378,7 @@ void fdVER(char path[512]){
     for (int i = 0; i < 4; ++i) {
         cout<<"********** Partición "<<(i+1)<<" **********"<<endl;
         cout<<"Name: "<<particiones[i].part_name<<endl;
+        cout<<"Status: "<<particiones[i].part_status<<endl;
         cout<<"Tipo: "<<particiones[i].part_type<<endl;
         cout<<"Inicio: "<<particiones[i].part_start<<endl;
         cout<<"FIN: "<<(particiones[i].part_start+particiones[i].part_size)<<endl;
@@ -1364,6 +1418,7 @@ void fdVER(char path[512]){
                     if (B_ebr.part_fit == 'B' || B_ebr.part_fit == 'F' || B_ebr.part_fit == 'W') {
                         cout<<"************************"<<endl;
                         cout<<"Name: "<<B_ebr.part_name<<endl;
+                        cout<<"Status: "<<B_ebr.part_status<<endl;
                         cout<<"Inicio: "<<B_ebr.part_start<<endl;
                         cout<<"FIN: "<<(B_ebr.part_start+B_ebr.part_size)<<endl;
 
@@ -1377,7 +1432,9 @@ void fdVER(char path[512]){
                             fread(&aux, sizeof (ebr), 1, f);
 
                             if (aux.part_fit == 'B' || aux.part_fit == 'F' || aux.part_fit == 'W') { //Hay siguiente
+                                cout<<"************************"<<endl;
                                 cout<<"Name: "<<aux.part_name<<endl;
+                                cout<<"Status: "<<aux.part_status<<endl;
                                 cout<<"Inicio: "<<aux.part_start<<endl;
                                 cout<<"FIN: "<<(aux.part_start+aux.part_size)<<endl;
 
@@ -1396,8 +1453,9 @@ void fdVER(char path[512]){
                 fseek(f, inicio, SEEK_SET);
                 fread(&B_ebr, sizeof (ebr), 1, f);
                 if (B_ebr.part_fit == 'B' || B_ebr.part_fit == 'F' || B_ebr.part_fit == 'W') {
-                    cout<<"*******************************"<<endl;
+                    cout<<"************************"<<endl;
                     cout<<"Name: "<<B_ebr.part_name<<endl;
+                    cout<<"Status: "<<B_ebr.part_status<<endl;
                     cout<<"Inicio: "<<B_ebr.part_start<<endl;
                     cout<<"FIN: "<<(B_ebr.part_start+B_ebr.part_size)<<endl;
 
@@ -1411,7 +1469,9 @@ void fdVER(char path[512]){
                         fread(&aux, sizeof (ebr), 1, f);
 
                         if (aux.part_fit == 'B' || aux.part_fit == 'F' || aux.part_fit == 'W') { //Hay siguiente
+                            cout<<"************************"<<endl;
                             cout<<"Name: "<<aux.part_name<<endl;
+                            cout<<"Status: "<<aux.part_status<<endl;
                             cout<<"Inicio: "<<aux.part_start<<endl;
                             cout<<"FIN: "<<(aux.part_start+aux.part_size)<<endl;
 
