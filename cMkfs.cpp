@@ -202,6 +202,7 @@ superBloque sb_retornar(char id[16]) {
 }
 
 void jr_escribir(int inicio, int n, char ruta[512], journalie aux[]) { //TODO AGREGAR RAID
+
     FILE *f;
     if ((f = fopen(ruta, "r+b")) == NULL) {
         cout<<"Error: no se pudo abrir el disco!"<<endl;
@@ -229,10 +230,37 @@ void bmb_escribir(int inicio, int n, char ruta[512], bmBloque aux[]) { //TODO AG
     }
 }
 
-void bmb_leer(int inicio, int n, char ruta[512], bmBloque *aux) { //TODO AGREGAR RAID
+void bmb_leer(int inicio, int n, char ruta[512], bmBloque *aux) {
+    string auxf = ruta;
+    size_t pos = 0;
+    string res = "";
+    while ((pos = auxf.find("/")) != string::npos) {
+        res += auxf.substr(0, pos) + "/";
+        auxf.erase(0, pos + 1);
+    }
+
+    string nombree = "";
+    pos = auxf.find(".");
+    nombree += auxf.substr(0, pos);
+    auxf.erase(0, pos + 1);
+
+    char ruta2[512] = "";
+    strcpy(ruta2, res.c_str());
+    strcat(ruta2, nombree.c_str());
+    strcat(ruta2, "_rd.dsk");
+
     FILE *f;
     if ((f = fopen(ruta, "r+b")) == NULL) {
-        cout<<"Error: no se pudo abrir el disco!"<<endl;
+        if ((f = fopen(ruta2, "r+b")) == NULL) {
+            cout<<"Error: no se pudo abrir el disco!"<<endl;
+        } else {
+            int j;
+            for (j = 0; j < n * 3; j++) {
+                fseek(f, inicio + j * (sizeof (bmBloque)), SEEK_SET);
+                fread(&aux[j], sizeof (bmBloque), 1, f);
+            }
+            fclose(f);
+        }
     } else {
         int j;
         for (j = 0; j < n * 3; j++) {
@@ -243,10 +271,30 @@ void bmb_leer(int inicio, int n, char ruta[512], bmBloque *aux) { //TODO AGREGAR
     }
 }
 
-void bmi_escribir(int inicio, int n, char ruta[512], bmInodo aux[]) { //TODO AGREGAR RAID
+void bmi_escribir(int inicio, int n, char ruta[512], bmInodo aux[]) {
+    string auxf = ruta;
+    size_t pos = 0;
+    string res = "";
+    while ((pos = auxf.find("/")) != string::npos) {
+        res += auxf.substr(0, pos) + "/";
+        auxf.erase(0, pos + 1);
+    }
+
+    string nombree = "";
+    pos = auxf.find(".");
+    nombree += auxf.substr(0, pos);
+    auxf.erase(0, pos + 1);
+
+    char ruta2[512] = "";
+    strcpy(ruta2, res.c_str());
+    strcat(ruta2, nombree.c_str());
+    strcat(ruta2, "_rd.dsk");
+
+    bool pudo1 = true;
+    bool pudo2 = true;
     FILE *f;
     if ((f = fopen(ruta, "r+b")) == NULL) {
-        cout<<"Error: no se pudo abrir el disco!"<<endl;
+        pudo1 = false;
     } else {
         int j;
         for (j = 0; j < n; j++) {
@@ -255,6 +303,21 @@ void bmi_escribir(int inicio, int n, char ruta[512], bmInodo aux[]) { //TODO AGR
             fwrite(&aux[j], sizeof (bmInodo), 1, f);
         }
         fclose(f);
+    }
+    if ((f = fopen(ruta2, "r+b")) == NULL) {
+        pudo2 = false;
+    } else {
+        int j;
+        for (j = 0; j < n; j++) {
+            fseek(f, inicio + j * (sizeof (bmInodo)), SEEK_SET);
+            //bmInodo aux2 = aux[j];
+            fwrite(&aux[j], sizeof (bmInodo), 1, f);
+        }
+        fclose(f);
+    }
+
+    if(pudo1==false && pudo2==false){
+        cout<<"Error: no se pudo abrir el disco!"<<endl;
     }
 }
 
