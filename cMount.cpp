@@ -22,7 +22,7 @@ ebr devolverLogica(char ruta[512], char nombre[16]);
 mnt_nodo* mntCrearNodo(partitiond particion, ebr logica, char ruta[512]);
 char letraDeDisco(mnt_lista*lista, char ruta[512]);
 char numeroDeDisco(mnt_lista*lista, char letra);
-void actualizarStatus(char path[512], char name[16], char status);
+
 
 const string fecha(time_t now) {
     struct tm  tstruct;

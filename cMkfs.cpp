@@ -51,34 +51,47 @@ void cMkfs(int add, char id[16], char unitt[16], char type[16]){
         char part_colocacion = ' ';
         int pimerEspacioEBR = 0;
 
+        char path[512];
+        char nombre[16];
+        char status;
+
         if (particion.mnt_particion.part_fit == 'B' || particion.mnt_particion.part_fit == 'F' || particion.mnt_particion.part_fit == 'W') {//es primaria
             part_inicio = particion.mnt_particion.part_start;
             part_tamano = particion.mnt_particion.part_size;
             part_colocacion = particion.mnt_particion.part_type;
+            strcpy(path,particion.mnt_ruta);
+            strcpy(nombre,particion.mnt_particion.part_name);
+            status = particion.mnt_particion.part_status;
             pimerEspacioEBR = 0;
         } else {//Si es el ebr
             part_inicio = particion.mnt_ebr.part_start;
             part_tamano = particion.mnt_ebr.part_size;
             part_colocacion = metodoDeColocacionExtendida;
+            strcpy(path,particion.mnt_ruta);
+            strcpy(nombre,particion.mnt_ebr.part_name);
+            status = particion.mnt_ebr.part_status;
             pimerEspacioEBR = sizeof (ebr);
         }
 
-        double partta = (double) part_tamano;
-        double nu;
-        nu = (partta - sizeof (superBloque)) / (4.0 + 3.0 * 64.0 + sizeof (inodo) + sizeof (journalie));
-        printf("\tSuperBloque=%i| Inodo = %i|Journalie=%i\n", sizeof (superBloque), sizeof (inodo), sizeof (journalie));
-        cout<<"SuperBloque = "<<sizeof (superBloque)<<"| Inodo = "<<sizeof (inodo)<<"|Journalie = "<<sizeof (journalie)<<endl;
-        cout<<"Tamaño de la partición = "<< part_tamano<<endl;
-        cout<<"N en double = "<< nu<<endl;
-        int n = (int) nu;
-        cout<<"N en entero = "<< n<<endl;
-        int disk = sizeof (superBloque) + n + n * sizeof (journalie) + 3 * n + n * sizeof (inodo) + 3 * n * sizeof (bloqueCarpeta);
-        cout<<"Tamaño de formato es = "<<disk<<endl;
+        if(status!='1'){
+            double partta = (double) part_tamano;
+            double nu;
+            nu = (partta - sizeof (superBloque)) / (4.0 + 3.0 * 64.0 + sizeof (inodo) + sizeof (journalie));
+            printf("\tSuperBloque=%i| Inodo = %i|Journalie=%i\n", sizeof (superBloque), sizeof (inodo), sizeof (journalie));
+            cout<<"SuperBloque = "<<sizeof (superBloque)<<"| Inodo = "<<sizeof (inodo)<<"|Journalie = "<<sizeof (journalie)<<endl;
+            cout<<"Tamaño de la partición = "<< part_tamano<<endl;
+            cout<<"N en double = "<< nu<<endl;
+            int n = (int) nu;
+            cout<<"N en entero = "<< n<<endl;
+            int disk = sizeof (superBloque) + n + n * sizeof (journalie) + 3 * n + n * sizeof (inodo) + 3 * n * sizeof (bloqueCarpeta);
+            cout<<"Tamaño de formato es = "<<disk<<endl;
 
-        crear_ext3(particion, n, part_inicio + pimerEspacioEBR); //creando los sectores, super bloque, inodos
-        cout<<"\t...................Se ha formateado la partición................"<<endl;
-        //luego tengo que crear la raíz por que si no voy a pisar
+            crear_ext3(particion, n, part_inicio + pimerEspacioEBR); //creando los sectores, super bloque, inodos
 
+            actualizarStatus(path,nombre,'2');
+            cout<<"\t...................Se ha formateado la partición................"<<endl;
+            //TODO  crear la raíz por que si no voy a pisar
+        }
     }
 }
 
