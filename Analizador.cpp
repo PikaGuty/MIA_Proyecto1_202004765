@@ -1450,7 +1450,7 @@ void comando_REP(char *token){
             comandos.erase(0, 1 + pos);
         }else{
             if (comandos!=anterior){
-                cout<<"Error: "<<ncomando<<" no es un parámetro del comando \"LOSS\""<<endl;
+                cout<<"Error: "<<ncomando<<" no es un parámetro del comando \"REP\""<<endl;
             }
         }
 
@@ -1467,7 +1467,7 @@ void comando_REP(char *token){
         cout<<"Id: "<<id<<endl;
         cout<<"Name: "<<name<<endl;
         cout<<"Path: "<<path<<endl;
-        //TODO REP
+        reportes(path,name,id);
     }else{ //Notificando errores si no se ingresaron los parametros obligatorios al comando
         cout<<"Error: El comando \"REP\" debe poseer el/los parámetros ";
         if(xid == false){

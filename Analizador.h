@@ -10,6 +10,7 @@
 #include "CFdisk.h"
 #include "cMount.h"
 #include "cMkfs.h"
+#include "cRep.h"
 
 void analizar();
 
