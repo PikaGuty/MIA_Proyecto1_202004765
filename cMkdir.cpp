@@ -6,6 +6,7 @@
 
 particionMontada devolverParticionMontada(char id[16]);
 void fechActual(char fecha[128]);
+void crearRoot(char id[16]);
 
 void cMkdir(char path[512], char id[16], bool p){
     particionMontada m= devolverParticionMontada(id);
