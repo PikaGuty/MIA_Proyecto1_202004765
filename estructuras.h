@@ -100,4 +100,18 @@ typedef struct{
     char Padre[12];
 }journalie;
 
+typedef struct {
+    char part_type;//e o p
+    int part_inicio;//inicio
+    int part_tamano;//tamaño d ela particion
+    char part_colocacion;//w,b,
+    int part_espacioEbr;//si es extendida
+    int part_status;//activa o no
+    char part_name[16];//nombre de la partición.
+    char ruta[512];//ruta del disco
+    char id[16];//id del disco
+    times part_time; //tiempo en que se monto el disco
+
+}particionMontada;
+
 #endif //MIA_PROYECTO1_202004765_ESTRUCTURAS_H

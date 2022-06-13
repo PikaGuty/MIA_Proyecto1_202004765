@@ -81,10 +81,10 @@ void execMKDISK(char rut[512], int tamano, char principal){
 
 
     string aux = getDirectorio(rut);
-    string crear = "sudo mkdir -p \'"+aux+"\'";
+    string crear = "sudo -S mkdir -p \'"+aux+"\'";
     system(crear.c_str());
     //cout<<aux<<endl;
-    string compermiso = "sudo chmod -R 777 \'"+aux+"\'";
+    string compermiso = "sudo -S chmod -R 777 \'"+aux+"\'";
     system(compermiso.c_str());
 
     if ((f = fopen(rut, "w+b")) == NULL) {

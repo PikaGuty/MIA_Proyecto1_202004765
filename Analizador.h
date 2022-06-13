@@ -11,6 +11,8 @@
 #include "cMount.h"
 #include "cMkfs.h"
 #include "cRep.h"
+#include "cMkdir.h"
+#include "cMkfile.h"
 
 void analizar();
 

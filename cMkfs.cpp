@@ -1,23 +1,11 @@
 //
 // Created by javierg on 11/06/22.
 //
-#include <iostream>
-#include "cMkfs.h"
-#include <string.h>
 
-#include "StructsDatos.h"
-#include "cMount.h"
+#include "cMkfs.h"
+
 
 using namespace std;
-
-void crear_ext3(mnt_nodo mountNodo, int n, int inicioParticion);
-superBloque sb_inicializar(int n, times tiempo, int inicio);
-void sb_escribir(char ruta[512], int inicio, superBloque sb);
-void jr_escribir(int inicio, int n, char ruta[512], journalie aux[]);
-void bmb_leer(int inicio, int n, char ruta[512], bmBloque *aux);
-void bmb_escribir(int inicio, int n, char ruta[512], bmBloque aux[]);
-void bmi_escribir(int inicio, int n, char ruta[512], bmInodo aux[]);
-void inodos_escribir(int inicio, int n, char ruta[512], inodo aux[]);
 
 void cMkfs(int add, char id[16], char unitt[16], char type[16]){
 
@@ -77,7 +65,6 @@ void cMkfs(int add, char id[16], char unitt[16], char type[16]){
             double partta = (double) part_tamano;
             double nu;
             nu = (partta - sizeof (superBloque)) / (4.0 + 3.0 * 64.0 + sizeof (inodo) + sizeof (journalie));
-            printf("\tSuperBloque=%i| Inodo = %i|Journalie=%i\n", sizeof (superBloque), sizeof (inodo), sizeof (journalie));
             cout<<"SuperBloque = "<<sizeof (superBloque)<<"| Inodo = "<<sizeof (inodo)<<"|Journalie = "<<sizeof (journalie)<<endl;
             cout<<"Tamaño de la partición = "<< part_tamano<<endl;
             cout<<"N en double = "<< nu<<endl;
@@ -471,6 +458,49 @@ void bmi_escribir(int inicio, int n, char ruta[512], bmInodo aux[]) {
     }
 }
 
+void bmi_leer(int inicio, int n, char ruta[512], bmInodo *aux) {
+    string auxf = ruta;
+    size_t pos = 0;
+    string res = "";
+    while ((pos = auxf.find("/")) != string::npos) {
+        res += auxf.substr(0, pos) + "/";
+        auxf.erase(0, pos + 1);
+    }
+
+    string nombree = "";
+    pos = auxf.find(".");
+    nombree += auxf.substr(0, pos);
+    auxf.erase(0, pos + 1);
+
+    char ruta2[512] = "";
+    strcpy(ruta2, res.c_str());
+    strcat(ruta2, nombree.c_str());
+    strcat(ruta2, "_rd.dsk");
+
+    FILE *f;
+    if ((f = fopen(ruta, "r+b")) == NULL) {
+        if ((f = fopen(ruta2, "r+b")) == NULL) {
+            cout<<"Error: no se pudo abrir el disco!"<<endl;
+        } else {
+            int j;
+            for (j = 0; j < n; j++) {
+                //bmInodo aux2 = aux[j];
+                fseek(f, inicio + j * (sizeof (bmInodo)), SEEK_SET);
+                fread(&aux[j], sizeof (bmInodo), 1, f);
+            }
+            fclose(f);
+        }
+    } else {
+        int j;
+        for (j = 0; j < n; j++) {
+            //bmInodo aux2 = aux[j];
+            fseek(f, inicio + j * (sizeof (bmInodo)), SEEK_SET);
+            fread(&aux[j], sizeof (bmInodo), 1, f);
+        }
+        fclose(f);
+    }
+}
+
 void inodos_escribir(int inicio, int n, char ruta[512], inodo aux[]) {
     string auxf = ruta;
     size_t pos = 0;
@@ -517,4 +547,45 @@ void inodos_escribir(int inicio, int n, char ruta[512], inodo aux[]) {
         cout<<"Error: no se pudo abrir el disco!"<<endl;
     }
 
+}
+
+void inodos_leer(int inicio, int n, char ruta[512], inodo *aux) {
+    string auxf = ruta;
+    size_t pos = 0;
+    string res = "";
+    while ((pos = auxf.find("/")) != string::npos) {
+        res += auxf.substr(0, pos) + "/";
+        auxf.erase(0, pos + 1);
+    }
+
+    string nombree = "";
+    pos = auxf.find(".");
+    nombree += auxf.substr(0, pos);
+    auxf.erase(0, pos + 1);
+
+    char ruta2[512] = "";
+    strcpy(ruta2, res.c_str());
+    strcat(ruta2, nombree.c_str());
+    strcat(ruta2, "_rd.dsk");
+
+    FILE *f;
+    if ((f = fopen(ruta, "r+b")) == NULL) {
+        if ((f = fopen(ruta2, "r+b")) == NULL) {
+            cout<<"Error: no se pudo abrir el disco!"<<endl;
+        } else {
+            int j;
+            for (j = 0; j < n; j++) {
+                fseek(f, inicio + j * (sizeof (inodo)), SEEK_SET);
+                fread(&aux[j], sizeof (inodo), 1, f);
+            }
+            fclose(f);
+        }
+    } else {
+        int j;
+        for (j = 0; j < n; j++) {
+            fseek(f, inicio + j * (sizeof (inodo)), SEEK_SET);
+            fread(&aux[j], sizeof (inodo), 1, f);
+        }
+        fclose(f);
+    }
 }

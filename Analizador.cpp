@@ -902,7 +902,7 @@ void comando_MKFILE(char *token){
         cout<<"Size: "<<size<<endl;
         cout<<"Cont: "<<cont<<endl;
 
-        //TODO MKFILE
+        cMkfile(path, id, xp, size, cont);
     }else{ //Notificando errores si no se ingresaron los parametros obligatorios al comando
         cout<<"Error: El comando \"MKFILE\" debe poseer el/los parámetros ";
 
@@ -1083,7 +1083,7 @@ void comando_MKDIR(char *token){
     bool xpath = false, xid = false;//Obligatorios
     bool xp = false;//Opcionales
     int add=0;
-    char path[512]="", id[32]="";
+    char path[512]="", id[16]="";
 
     if(token == NULL){//Error por si no trae ningun parametro
         cout<<"Error: El comando \"MKDIR\" debe poseer los parámetros $id y $path ya que son de caracter obligatorio."<<endl;
@@ -1188,7 +1188,8 @@ void comando_MKDIR(char *token){
         cout<<"Id: "<<id<<endl;
         cout<<"Path: "<<path<<endl;
         cout<<"P: "<<xp<<endl;
-
+        cout<<endl;
+        cMkdir(path, id, xp);
         //TODO MKDIR
     }else{ //Notificando errores si no se ingresaron los parametros obligatorios al comando
         cout<<"Error: El comando \"MKDIR\" debe poseer el/los parámetros ";
