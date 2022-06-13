@@ -61,7 +61,7 @@ void cMkfs(int add, char id[16], char unitt[16], char type[16]){
             pimerEspacioEBR = sizeof (ebr);
         }
 
-        if(status!='1'){
+        if(status!='0'){
             double partta = (double) part_tamano;
             double nu;
             nu = (partta - sizeof (superBloque)) / (4.0 + 3.0 * 64.0 + sizeof (inodo) + sizeof (journalie));
@@ -85,9 +85,10 @@ void cMkfs(int add, char id[16], char unitt[16], char type[16]){
 void crear_ext3(mnt_nodo mountNodo, int n, int inicioParticion) {
 
     superBloque sb = sb_inicializar(n, mountNodo.tiempo, inicioParticion);
+    cout<<"Antes de escribir "<<sb.s_inodes_count<<endl;
     sb_escribir(mountNodo.mnt_ruta, inicioParticion, sb); //Escribiendo el super bloque
 
-    journalie jr[n]; //arreglo de journalie
+    journalie jr[3*n]; //arreglo de journalie
     jr_escribir(inicioParticion + sizeof (superBloque), n, mountNodo.mnt_ruta, jr); //Journaling
 
     //Bitmap de bloques
@@ -126,37 +127,39 @@ void crear_ext3(mnt_nodo mountNodo, int n, int inicioParticion) {
 
 superBloque sb_inicializar(int n, times tiempo, int inicio) {//inicializo las variables del superbloque
 
-    cout<<"Inicio en = "<<inicio<<endl;
+    //cout<<"Inicio en = "<<inicio<<endl;
     superBloque sb;
 
     sb.s_inodes_count = n;
+    //cout<<"LE voy a meter "<<n<<" inodos"<<endl;
     sb.s_blocks_count = 3 * n;
 
-    sb.s_free_blocks_counts = n;
-    sb.s_free_inodes_count = 3 * n;
+    sb.s_free_blocks_counts = 3 * n;
+    sb.s_free_inodes_count = n;
 
     strcpy(sb.s_mtime, tiempo);
     strcpy(sb.s_unmtime, tiempo);
 
-    sb.s_mnt_count;
+    sb.s_mnt_count = 1;
     sb.s_magic = -1;
 
     sb.s_inode_size = sizeof (inodo);
     sb.s_block_size = sizeof (bloqueArchivo);
 
-    sb.s_first_ino = inicio + sizeof (superBloque) + 3 * n * sizeof (journalie) + 3 * n + n; //esta es la primer posicion y ya se agrego el +1 //primer inodo libre
+    sb.s_first_ino = inicio + sizeof (superBloque) + n * sizeof (journalie) + 3 * n + n; //esta es la primer posicion y ya se agrego el +1 //primer inodo libre
     sb.s_first_blo = sb.s_first_ino + n * sizeof (inodo); //primer bloque libre
 
-    sb.s_bm_inode_start = inicio + sizeof (superBloque) + 3 * n * sizeof (journalie);
+    sb.s_bm_inode_start = inicio + sizeof (superBloque) + n * sizeof (journalie);
     sb.s_bm_block_start = sb.s_bm_inode_start + n;
 
-    sb.s_inode_start = inicio + sizeof (superBloque) + 3 * n * sizeof (journalie) + 3 * n + n;
+    sb.s_inode_start = inicio + sizeof (superBloque) + n * sizeof (journalie) + 3 * n + n;
     sb.s_block_start = sb.s_inode_start + n * sizeof (inodo);
     sb.s_bjpurfree = inicio + sizeof (superBloque);
 
     return sb;
 }
 void sb_escribir(char ruta[512], int inicio, superBloque sb) {
+    cout<<"Inicio de la particion "<<inicio<<endl;
     string auxf = ruta;
     size_t pos = 0;
     string res = "";
@@ -210,7 +213,7 @@ superBloque sb_retornar(char id[16]) {
     char part_colocacion = ' ';
 
     int tamanoEBR = 0;
-    if (particion.mnt_particion.part_fit == 'b' || particion.mnt_particion.part_fit == 'f' || particion.mnt_particion.part_fit == 'w') {//es primaria
+    if (particion.mnt_particion.part_fit == 'B' || particion.mnt_particion.part_fit == 'F' || particion.mnt_particion.part_fit == 'W') {//es primaria
         part_inicio = particion.mnt_particion.part_start;
         part_tamano = particion.mnt_particion.part_size;
         part_colocacion = particion.mnt_particion.part_type;
@@ -256,6 +259,7 @@ superBloque sb_retornar(char id[16]) {
     } else {
 
         fseek(f, part_inicio + tamanoEBR, SEEK_SET);
+        //cout<<"INICIO "<<part_inicio+tamanoEBR<<endl;
         fread(&sb, sizeof (superBloque), 1, f);
         fclose(f);
     }
@@ -291,9 +295,9 @@ void jr_escribir(int inicio, int n, char ruta[512], journalie aux[]) {
         pudo1= false;
     } else {
         int j;
-        cout<<"Deberia llegar a "<<(3 * n + 1)<<endl;
-        cout<<"El tamaño es "<<sizeof (aux)<<endl;
-        for (j = 0; j < n+1; j++) {
+        //cout<<"Deberia llegar a "<<(3 * n + 1)<<endl;
+        //cout<<"El tamaño es "<<sizeof (aux)<<endl;
+        for (j = 0; j < n; j++) {
             fseek(f, inicio + j * (sizeof (journalie)), SEEK_SET);
             //cout<<"Posicionado en "<<(inicio + j * (sizeof (journalie)))<<endl;
             //cout<<"Va por "<<j<<" "<<(inicio + j * (sizeof (journalie)))<<endl;
@@ -307,7 +311,7 @@ void jr_escribir(int inicio, int n, char ruta[512], journalie aux[]) {
         pudo2=false;
     } else {
         int j;
-        for (j = 0; j < n + 1; j++) {
+        for (j = 0; j < n; j++) {
             fseek(f, inicio + j * (sizeof (journalie)), SEEK_SET);
             fwrite(&aux[j], sizeof (journalie), 1, f);
         }
@@ -366,7 +370,6 @@ void bmb_escribir(int inicio, int n, char ruta[512], bmBloque aux[]) {
         cout<<"Error: no se pudo abrir el disco!"<<endl;
     }
 }
-
 void bmb_leer(int inicio, int n, char ruta[512], bmBloque *aux) {
     string auxf = ruta;
     size_t pos = 0;
@@ -457,7 +460,6 @@ void bmi_escribir(int inicio, int n, char ruta[512], bmInodo aux[]) {
         cout<<"Error: no se pudo abrir el disco!"<<endl;
     }
 }
-
 void bmi_leer(int inicio, int n, char ruta[512], bmInodo *aux) {
     string auxf = ruta;
     size_t pos = 0;
@@ -548,7 +550,6 @@ void inodos_escribir(int inicio, int n, char ruta[512], inodo aux[]) {
     }
 
 }
-
 void inodos_leer(int inicio, int n, char ruta[512], inodo *aux) {
     string auxf = ruta;
     size_t pos = 0;

@@ -7,23 +7,31 @@
 particionMontada devolverParticionMontada(char id[16]);
 void fechActual(char fecha[128]);
 void crearRoot(char id[16]);
+void verSB(superBloque sb);
 
 void cMkdir(char path[512], char id[16], bool p){
     particionMontada m= devolverParticionMontada(id);
 
+    crearRoot(id);
+    /*
     cout<<"------------------ ParticionMontada: Id="<<m.id<<" ------------------"<<endl;
     cout<<"\t\tRuta: "<<m.ruta<<endl;
     cout<<"\t\tNombre: "<<m.part_name<<endl;
     cout<<"\t\tTiempoDeMontaje: "<<m.part_time<<endl;
     cout<<"\t\tTipo = "<< m.part_type<<"\tInicio= "<<m.part_inicio<<"\tTamño= "<<m.part_tamano<<endl;
     cout<<"\t\tColcn= "<<m.part_colocacion<<"\tEspEbr= "<<m.part_espacioEbr<<"\tStatus= "<<m.part_status<<endl;
+    */
 }
 
 void crearRoot(char id[16]) {
     //primero tengo que obtener el super bloque
     superBloque sb = sb_retornar(id);
     mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
-    int n = sb.s_inodes_count;
+    int n = sb.s_inodes_count; //Total de inodos
+    cout<<"******************* INICIO *******************"<<endl;
+    verSB(sb);
+    cout<<endl;
+    cout<<endl;
 
     //bit map de indos.
     bmInodo bm_Inodos[n];
@@ -55,6 +63,31 @@ void crearRoot(char id[16]) {
 
     //sb_escribir(mountNodo.mnt_ruta,)
 
+    cout<<"******************* FINAL *******************"<<endl;
+    verSB(sb);
+    cout<<endl;
+    cout<<endl;
+
+}
+
+void verSB(superBloque sb){
+    cout<<"No total inodos: "<<sb.s_inodes_count<<endl;
+    cout<<"No total bloques: "<<sb.s_blocks_count<<endl;
+    cout<<"No inodos libres: "<<sb.s_free_inodes_count<<endl;
+    cout<<"No bloques libres: "<<sb.s_free_blocks_counts<<endl;
+    cout<<"Ultima fecha montada: "<<sb.s_mtime<<endl;
+    cout<<"Ultima fecha desmontado: "<<sb.s_unmtime<<endl;
+    cout<<"No veces montado: "<<sb.s_mnt_count<<endl;
+    cout<<"No identificador SA: "<<sb.s_magic<<endl;
+    cout<<"Tamaño del inodo: "<<sb.s_inode_size<<endl;
+    cout<<"Tamaño del bloque: "<<sb.s_block_size<<endl;
+    cout<<"Primer inodo libre: "<<sb.s_first_ino<<endl;
+    cout<<"Primer bloque libre: "<<sb.s_first_blo<<endl;
+    cout<<"Inicio del bitmap inodos: "<<sb.s_bm_inode_start<<endl;
+    cout<<"Inicio del bitmap bloques: "<<sb.s_bm_block_start<<endl;
+    cout<<"Inicio tabla de inodos: "<<sb.s_inode_start<<endl;
+    cout<<"Inicio tabla de bloques: "<<sb.s_block_start<<endl;
+    cout<<"Padre: "<<sb.s_bjpurfree<<endl;
 }
 
 particionMontada devolverParticionMontada(char id[16]) {

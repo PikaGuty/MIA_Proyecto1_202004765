@@ -10,6 +10,7 @@ bool escribirDOT(string dot, char pathCe[512], char pathC[512], char extension[6
 
 void rMBR(char path[512], char nombre[16], char extension[6], char id[64]);
 void rDISK(char path[512], char nombre[16], char extension[6], char id[16]);
+void rSB(char path[512], char nombre[16], char extension[6], char id[16]);
 
 void reportes(char path[512], char namee[64], char id[64]){
     string nam = namee;
@@ -61,7 +62,7 @@ void reportes(char path[512], char namee[64], char id[64]){
     }else if(nam=="tree"){
         //TODO reporte tree
     }else if(nam=="sb"){
-        //TODO reporte sb
+        rSB(ruta, nombre, extension, id);
     }else if(nam=="file"){
         //TODO reporte file
     }else{
@@ -641,6 +642,145 @@ void rDISK(char path[512], char nombre[16], char extension[6], char id[16]){
          "\n"
          "}";
     cout<<dot<<endl;
+
+    char rutaCe[512],rutaC[512];
+    strcpy(rutaCe,path);
+    strcat(rutaCe,nombre);
+    strcat(rutaCe,".");
+    strcpy(rutaC,rutaCe);
+    strcat(rutaCe,extension);
+    escribirDOT(dot,rutaCe,rutaC,extension);
+}
+
+void rSB(char path[512], char nombre[16], char extension[6], char id[16]){
+    superBloque sb = sb_retornar(id);
+    string dot = "digraph G { \n"
+                 "\n"
+                 "    label=<\n"
+                 "    <TABLE border=\"3\" bgcolor=\"#60D394\" >\n"
+                 "    \n"
+                 "\n"
+                 "    \n"
+                 "    <TR><TD border=\"2\"  bgcolor=\"#EE6055\" gradientangle=\"315\" colspan=\"2\" >Super Bloque";
+    dot += id;
+    dot += "</TD></TR>\n"
+           "      \n"
+           "    <TR>\n"
+           "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">Número total de inodos</TD>\n"
+           "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+    dot += to_string(sb.s_inodes_count);
+    dot += "</TD>\n"
+           "    </TR>\n"
+           "    \n"
+           "    <TR>\n"
+           "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">Número total de bloques</TD>\n"
+           "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+    dot += to_string(sb.s_blocks_count);
+    dot += "</TD>\n"
+           "    </TR>\n"
+           "    \n"
+           "    <TR>\n"
+           "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Número de bloques libres</TD>\n"
+           "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+    dot += to_string(sb.s_free_inodes_count);
+    dot += "</TD>\n"
+           "    </TR>\n"
+           "    \n"
+           "    <TR>\n"
+           "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">Número de inodos libres</TD>\n"
+           "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+    dot += to_string(sb.s_free_blocks_counts);
+    dot += "</TD>\n"
+           "    </TR>\n"
+           "    \n"
+           "    <TR>\n"
+           "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Fecha en el que el sistema fue montado</TD>\n"
+           "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+    dot += sb.s_mtime;
+    dot += "</TD>\n"
+           "    </TR>\n"
+           "    \n"
+           "    <TR>\n"
+           "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Fecha en que el sistema fue desmontado</TD>\n"
+           "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+    dot += (sb.s_unmtime);
+    dot += "</TD>\n"
+           "    </TR>\n"
+           "    \n"
+           "    <TR>\n"
+           "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Número de veces se ha montado el sistema</TD>\n"
+           "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+    dot += to_string(sb.s_mnt_count);
+    dot += "</TD>\n"
+           "    </TR>\n"
+           "    \n"
+           "    <TR>\n"
+           "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Valor que identifica al sistema de archivos</TD>\n"
+           "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+    dot += to_string(sb.s_magic);
+    dot += "</TD>\n"
+           "    </TR>\n"
+           "    \n"
+           "    <TR>\n"
+           "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Tamaño del inodo</TD>\n"
+           "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+    dot += to_string(sb.s_inode_size);
+    dot += "</TD>\n"
+           "    </TR>\n"
+           "    \n"
+           "    <TR>\n"
+           "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Tamaño del bloque</TD>\n"
+           "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+    dot += to_string(sb.s_block_size);
+    dot += "</TD>\n"
+           "    </TR>\n"
+           "    \n"
+           "    <TR>\n"
+           "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Primer inodo libre</TD>\n"
+           "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+    dot += to_string(sb.s_first_ino);
+    dot += "</TD>\n"
+           "    </TR>\n"
+           "    \n"
+           "    <TR>\n"
+           "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Primer bloque libre</TD>\n"
+           "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+    dot += to_string(sb.s_first_blo);
+    dot += "</TD>\n"
+           "    </TR>\n"
+           "    \n"
+           "    <TR>\n"
+           "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Inicio del bitmap de inodos</TD>\n"
+           "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+    dot += to_string(sb.s_bm_inode_start);
+    dot += "</TD>\n"
+           "    </TR>\n"
+           "    \n"
+           "    <TR>\n"
+           "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Inicio del bitmap de bloques</TD>\n"
+           "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+    dot += to_string(sb.s_bm_block_start);
+    dot += "</TD>\n"
+           "    </TR>\n"
+           "    \n"
+           "    <TR>\n"
+           "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Inicio de la tabla de inodos</TD>\n"
+           "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+    dot += to_string(sb.s_inode_start);
+    dot += "</TD>\n"
+           "    </TR>\n"
+           "    \n"
+           "    <TR>\n"
+           "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Inico de la tabla de bloques</TD>\n"
+           "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+    dot += to_string(sb.s_block_start);
+    dot += "</TD>\n"
+           "    </TR>\n"
+           "\n"
+           "    </TABLE>>\n"
+           "    \n"
+           "    }";
+
 
     char rutaCe[512],rutaC[512];
     strcpy(rutaCe,path);

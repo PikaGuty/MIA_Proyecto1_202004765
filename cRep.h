@@ -17,6 +17,7 @@
 #include "estructuras.h"
 #include "StructsDatos.h"
 #include "cMount.h"
+#include "cMkfs.h"
 
 using namespace std;
 
