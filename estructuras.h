@@ -40,7 +40,7 @@ typedef struct {
 } ebr;
 
 typedef struct{
-    int i_uid ;     //UID del propietario
+    int i_uid;     //UID del propietario
     int i_gid;      //GID al grupo al que pertenece
 
     int i_size;     //tamaño del archivo en bytes

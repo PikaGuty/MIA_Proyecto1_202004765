@@ -4,6 +4,7 @@
 
 #include "cMkfs.h"
 
+void fechActual(times fecha);
 
 using namespace std;
 
@@ -61,31 +62,35 @@ void cMkfs(int add, char id[16], char unitt[16], char type[16]){
             pimerEspacioEBR = sizeof (ebr);
         }
 
-        if(status!='0'){
+
             double partta = (double) part_tamano;
             double nu;
-            nu = (partta - sizeof (superBloque)) / (4.0 + 3.0 * 64.0 + sizeof (inodo) + sizeof (journalie));
-            cout<<"SuperBloque = "<<sizeof (superBloque)<<"| Inodo = "<<sizeof (inodo)<<"|Journalie = "<<sizeof (journalie)<<endl;
-            cout<<"Tamaño de la partición = "<< part_tamano<<endl;
-            cout<<"N en double = "<< nu<<endl;
+            nu = (partta - sizeof(superBloque)) / (4.0 + 3.0 * 64.0 + sizeof(inodo) + sizeof(journalie));
+            cout << "SuperBloque = " << sizeof(superBloque) << "| Inodo = " << sizeof(inodo) << "|Journalie = "
+                 << sizeof(journalie) << endl;
+            cout << "Tamaño de la partición = " << part_tamano << endl;
+            cout << "N en double = " << nu << endl;
             int n = (int) nu;
-            cout<<"N en entero = "<< n<<endl;
-            int disk = sizeof (superBloque) + n + n * sizeof (journalie) + 3 * n + n * sizeof (inodo) + 3 * n * sizeof (bloqueCarpeta);
-            cout<<"Tamaño de formato es = "<<disk<<endl;
+            cout << "N en entero = " << n << endl;
+            int disk = sizeof(superBloque) + n + n * sizeof(journalie) + 3 * n + n * sizeof(inodo) +
+                       3 * n * sizeof(bloqueCarpeta);
+            cout << "Tamaño de formato es = " << disk << endl;
 
-            crear_ext3(particion, n, part_inicio + pimerEspacioEBR); //creando los sectores, super bloque, inodos
+            if (status != '2') {
+                crear_ext3(particion, n, part_inicio + pimerEspacioEBR); //creando los sectores, super bloque, inodos
 
-            actualizarStatus(path,nombre,'2');
-            cout<<"\t...................Se ha formateado la partición................"<<endl;
+                actualizarStatus(path, nombre, '2');
+            }
+            cout << "\t...................Se ha formateado la partición................" << endl;
             //TODO  crear la raíz por que si no voy a pisar
-        }
+
     }
 }
 
 void crear_ext3(mnt_nodo mountNodo, int n, int inicioParticion) {
 
     superBloque sb = sb_inicializar(n, mountNodo.tiempo, inicioParticion);
-    cout<<"Antes de escribir "<<sb.s_inodes_count<<endl;
+    //cout<<"Antes de escribir "<<sb.s_inodes_count<<endl;
     sb_escribir(mountNodo.mnt_ruta, inicioParticion, sb); //Escribiendo el super bloque
 
     journalie jr[3*n]; //arreglo de journalie
@@ -115,13 +120,26 @@ void crear_ext3(mnt_nodo mountNodo, int n, int inicioParticion) {
     // inodos
     inodo agrregloInodo[n];
     inodo ino;
-    int t;
-    for (t = 0; t < n; t++) {
-        ino.i_uid = t;
+
+    times fech;
+    fechActual(fech);
+    ino.i_uid = 1;
+    ino.i_gid = 1;
+    ino.i_size = 0;
+    strcpy(ino.i_atime,"");
+    strcpy(ino.i_ctime,fech);
+    strcpy(ino.i_mtime,"");
+    for (int j = 0; j < 15; ++j) {
+        ino.i_block[j]=-1;
+    }
+    ino.i_type='0';
+
+    for (int t = 0; t < n; t++) {
         agrregloInodo[t] = ino;
     }
 
     inodos_escribir(sb.s_inode_start, n, mountNodo.mnt_ruta, agrregloInodo);
+
 
 }
 
@@ -589,4 +607,177 @@ void inodos_leer(int inicio, int n, char ruta[512], inodo *aux) {
         }
         fclose(f);
     }
+}
+
+//Estos son para meter solo 1
+void blocksC_escribir(int inicio, int n, char ruta[512], bloqueCarpeta aux) {
+    string auxf = ruta;
+    size_t pos = 0;
+    string res = "";
+    while ((pos = auxf.find("/")) != string::npos) {
+        res += auxf.substr(0, pos) + "/";
+        auxf.erase(0, pos + 1);
+    }
+
+    string nombree = "";
+    pos = auxf.find(".");
+    nombree += auxf.substr(0, pos);
+    auxf.erase(0, pos + 1);
+
+    char ruta2[512] = "";
+    strcpy(ruta2, res.c_str());
+    strcat(ruta2, nombree.c_str());
+    strcat(ruta2, "_rd.dsk");
+
+    bool pudo1 = true, pudo2 = true;
+    FILE *f;
+    if ((f = fopen(ruta, "r+b")) == NULL) {
+        pudo1 = false;
+    } else {
+        fseek(f, inicio, SEEK_SET);
+        fwrite(&aux, sizeof (bloqueCarpeta), 1, f);
+
+        fclose(f);
+    }
+    if ((f = fopen(ruta2, "r+b")) == NULL) {
+        pudo2 = false;
+    } else {
+        fseek(f, inicio, SEEK_SET);
+        fwrite(&aux, sizeof (bloqueCarpeta), 1, f);
+
+        fclose(f);
+    }
+
+    if(pudo1==false && pudo2==false){
+        cout<<"Error: no se pudo abrir el disco!"<<endl;
+    }
+
+}
+bloqueCarpeta blocksC_leer(int inicio, int n, char ruta[512], bloqueCarpeta aux) {
+    string auxf = ruta;
+    size_t pos = 0;
+    string res = "";
+    while ((pos = auxf.find("/")) != string::npos) {
+        res += auxf.substr(0, pos) + "/";
+        auxf.erase(0, pos + 1);
+    }
+
+    string nombree = "";
+    pos = auxf.find(".");
+    nombree += auxf.substr(0, pos);
+    auxf.erase(0, pos + 1);
+
+    char ruta2[512] = "";
+    strcpy(ruta2, res.c_str());
+    strcat(ruta2, nombree.c_str());
+    strcat(ruta2, "_rd.dsk");
+
+    FILE *f;
+    if ((f = fopen(ruta, "r+b")) == NULL) {
+        if ((f = fopen(ruta2, "r+b")) == NULL) {
+            cout<<"Error: no se pudo abrir el disco!"<<endl;
+        } else {
+            fseek(f, inicio, SEEK_SET);
+            fread(&aux, sizeof (bloqueCarpeta), 1, f);
+
+            fclose(f);
+        }
+    } else {
+        fseek(f, inicio, SEEK_SET);
+        fread(&aux, sizeof (bloqueCarpeta), 1, f);
+
+        fclose(f);
+    }
+    return aux;
+}
+
+void blocksA_escribir(int inicio, int n, char ruta[512], bloqueArchivo aux) {
+    string auxf = ruta;
+    size_t pos = 0;
+    string res = "";
+    while ((pos = auxf.find("/")) != string::npos) {
+        res += auxf.substr(0, pos) + "/";
+        auxf.erase(0, pos + 1);
+    }
+
+    string nombree = "";
+    pos = auxf.find(".");
+    nombree += auxf.substr(0, pos);
+    auxf.erase(0, pos + 1);
+
+    char ruta2[512] = "";
+    strcpy(ruta2, res.c_str());
+    strcat(ruta2, nombree.c_str());
+    strcat(ruta2, "_rd.dsk");
+
+    bool pudo1 = true, pudo2 = true;
+    FILE *f;
+    if ((f = fopen(ruta, "r+b")) == NULL) {
+        pudo1 = false;
+    } else {
+        fseek(f, inicio, SEEK_SET);
+        fwrite(&aux, sizeof (bloqueArchivo), 1, f);
+
+        fclose(f);
+    }
+    if ((f = fopen(ruta2, "r+b")) == NULL) {
+        pudo2 = false;
+    } else {
+        fseek(f, inicio, SEEK_SET);
+        fwrite(&aux, sizeof (bloqueArchivo), 1, f);
+
+        fclose(f);
+    }
+
+    if(pudo1==false && pudo2==false){
+        cout<<"Error: no se pudo abrir el disco!"<<endl;
+    }
+
+}
+void blocksA_leer(int inicio, int n, char ruta[512], bloqueCarpeta aux) {
+    string auxf = ruta;
+    size_t pos = 0;
+    string res = "";
+    while ((pos = auxf.find("/")) != string::npos) {
+        res += auxf.substr(0, pos) + "/";
+        auxf.erase(0, pos + 1);
+    }
+
+    string nombree = "";
+    pos = auxf.find(".");
+    nombree += auxf.substr(0, pos);
+    auxf.erase(0, pos + 1);
+
+    char ruta2[512] = "";
+    strcpy(ruta2, res.c_str());
+    strcat(ruta2, nombree.c_str());
+    strcat(ruta2, "_rd.dsk");
+
+    bool pudo1 = true, pudo2 = true;
+    FILE *f;
+    if ((f = fopen(ruta, "r+b")) == NULL) {
+        if ((f = fopen(ruta2, "r+b")) == NULL) {
+            cout<<"Error: no se pudo abrir el disco!"<<endl;
+        } else {
+            fseek(f, inicio, SEEK_SET);
+            fread(&aux, sizeof (bloqueArchivo), 1, f);
+
+            fclose(f);
+        }
+    } else {
+        fseek(f, inicio, SEEK_SET);
+        fread(&aux, sizeof (bloqueArchivo), 1, f);
+
+        fclose(f);
+    }
+
+}
+
+void fechActual(times fecha) {
+    time_t     now = time(0);
+    struct tm  tstruct;
+    char       buf[80];
+    tstruct = *localtime(&now);
+    strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
+    strcpy(fecha,buf);
 }

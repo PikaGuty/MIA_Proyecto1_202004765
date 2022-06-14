@@ -12,7 +12,62 @@ void verSB(superBloque sb);
 void cMkdir(char path[512], char id[16], bool p){
     particionMontada m= devolverParticionMontada(id);
 
+
     crearRoot(id);
+
+    superBloque sb = sb_retornar(id);
+    mnt_nodo mountNodo = retornarNodoMount(id);
+    int n = sb.s_inodes_count; //Total de inodos
+    inodo ino[n];
+    inodos_leer(sb.s_inode_start,n,mountNodo.mnt_ruta,ino);
+
+    cout<<"UID del usuario: "<<ino[0].i_uid<<endl;
+    cout<<"GID del grupo: "<<ino[0].i_gid<<endl;
+    cout<<"Tamaño del archivo: "<<ino[0].i_size<<endl;
+    cout<<"Última fecha en que se leyó el inodo sin modificarlo: "<<ino[0].i_atime<<endl;
+    cout<<"Fecha en la que se creó el inodo: "<<ino[0].i_ctime<<endl;
+    cout<<"Última fecha en la que de modificación del inodo: "<<ino[0].i_mtime<<endl;
+    for (int j = 0; j < 15; ++j) {
+        if(j<12){
+            cout<<"AD"<<j<<": "<<ino[0].i_block[j]<<endl;
+            if(ino[0].i_block[j]!=-1){
+                cout<<"ESCRIBIR 2 "<<ino[0].i_block[j]<<endl;
+                cout<<"********************************** CARPETA **********************************"<<endl;
+                bloqueCarpeta carpeta=blocksC_leer(ino[0].i_block[j],n,mountNodo.mnt_ruta,carpeta);
+                cout<<"Nombre 1: "<<carpeta.b_content[0].b_name<<endl;
+                cout<<"Inodo 1: "<<carpeta.b_content[0].b_inodo<<endl;
+                cout<<"Nombre 2: "<<carpeta.b_content[1].b_name<<endl;
+                cout<<"Inodo 2: "<<carpeta.b_content[1].b_inodo<<endl;
+                cout<<"Nombre 3: "<<carpeta.b_content[2].b_name<<endl;
+                cout<<"Inodo 3: "<<carpeta.b_content[2].b_inodo<<endl;
+                cout<<"Nombre 4: "<<carpeta.b_content[3].b_name<<endl;
+                cout<<"Inodo 4: "<<carpeta.b_content[3].b_inodo<<endl;
+                cout<<"****************************************************************************"<<endl;
+            }
+        }else{
+            cout<<"AI"<<j<<": "<<ino[0].i_block[j]<<endl;
+            if(ino[0].i_block[j]!=-1){
+                cout<<"********************************** CARPETA **********************************"<<endl;
+                bloqueCarpeta carpeta;
+                blocksC_leer(ino[0].i_block[j],n,mountNodo.mnt_ruta,carpeta);
+                cout<<"Nombre 1: "<<carpeta.b_content[0].b_name<<endl;
+                cout<<"Inodo 1: "<<carpeta.b_content[0].b_inodo<<endl;
+                cout<<"Nombre 2: "<<carpeta.b_content[1].b_name<<endl;
+                cout<<"Inodo 2: "<<carpeta.b_content[1].b_inodo<<endl;
+                cout<<"Nombre 3: "<<carpeta.b_content[2].b_name<<endl;
+                cout<<"Inodo 3: "<<carpeta.b_content[2].b_inodo<<endl;
+                cout<<"Nombre 4: "<<carpeta.b_content[3].b_name<<endl;
+                cout<<"Inodo 4: "<<carpeta.b_content[3].b_inodo<<endl;
+                cout<<"****************************************************************************"<<endl;
+            }
+        }
+
+    }
+    cout<<"Tipo: "<<ino[0].i_type<<endl;
+
+
+
+    //
     /*
     cout<<"------------------ ParticionMontada: Id="<<m.id<<" ------------------"<<endl;
     cout<<"\t\tRuta: "<<m.ruta<<endl;
@@ -28,10 +83,9 @@ void crearRoot(char id[16]) {
     superBloque sb = sb_retornar(id);
     mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
     int n = sb.s_inodes_count; //Total de inodos
-    cout<<"******************* INICIO *******************"<<endl;
-    verSB(sb);
-    cout<<endl;
-    cout<<endl;
+
+    inodo ino[n];
+
 
     //bit map de indos.
     bmInodo bm_Inodos[n];
@@ -47,26 +101,69 @@ void crearRoot(char id[16]) {
 
     //Modificando los inodos
     Inodos[0].i_size=0;//el tamaño del archivo
-    fechActual(Inodos[0].i_atime);//ultima fecha que se leyó el nodo sin modificarlo
-    fechActual(Inodos[0].i_ctime);
-    fechActual(Inodos[0].i_mtime);
+    times fech;
+    fechActual(fech);
+    strcpy(Inodos[0].i_mtime,fech);
     Inodos[0].i_type=0;
     Inodos[0].i_block[0]= sb.s_first_blo;//primer bloque libre
+    Inodos[0].i_type='0';
     inodos_escribir(sb.s_inode_start, n, mountNodo.mnt_ruta, Inodos);//escribiendo lo inodos
+
+    cout<<"ESCRIBIR 1 "<<sb.s_block_start<<endl;
+    //indos
+    bloqueCarpeta blocks;
+    strcpy(blocks.b_content[0].b_name,".");
+    blocks.b_content[0].b_inodo = sb.s_inode_start;
+    strcpy(blocks.b_content[1].b_name,"..");
+    blocks.b_content[1].b_inodo = sb.s_inode_start;
+    strcpy(blocks.b_content[2].b_name,"");
+    blocks.b_content[2].b_inodo = -1;
+    strcpy(blocks.b_content[3].b_name,"");
+    blocks.b_content[3].b_inodo = -1;
+    blocksC_escribir(sb.s_block_start, n, mountNodo.mnt_ruta, blocks);
+
 
     //hay que modificar el super bloque
     sb.s_free_blocks_counts--;
     sb.s_free_inodes_count--;
-    sb.s_first_ino=sb.s_first_ino+sizeof(inodo);
-    sb.s_first_blo=sb.s_first_blo+sizeof(bloqueCarpeta);
-    sb.s_bjpurfree=sb.s_bjpurfree+sizeof(journalie);
+    sb.s_first_ino=sb.s_first_ino+sizeof(inodo)+1;
+    sb.s_first_blo=sb.s_first_blo+sizeof(bloqueCarpeta)+1;
 
-    //sb_escribir(mountNodo.mnt_ruta,)
+    int inicio=0;
+    if (mountNodo.mnt_particion.part_fit == 'B' || mountNodo.mnt_particion.part_fit == 'F' || mountNodo.mnt_particion.part_fit == 'W') {//es primaria
+        inicio = mountNodo.mnt_particion.part_start;
+    } else {//del ebr
+        inicio = mountNodo.mnt_ebr.part_start;
+    }
 
-    cout<<"******************* FINAL *******************"<<endl;
+    sb_escribir(mountNodo.mnt_ruta,inicio,sb);
+
+
+
+    /*cout<<"******************* FINAL *******************"<<endl;
     verSB(sb);
     cout<<endl;
     cout<<endl;
+
+    cout<<"******************* INODO *******************"<<endl;
+    for (int i = 0; i < 5; ++i) {
+        cout<<"UID del usuario: "<<ino[i].i_uid<<endl;
+        cout<<"GID del grupo: "<<ino[i].i_gid<<endl;
+        cout<<"Tamaño del archivo: "<<ino[i].i_size<<endl;
+        cout<<"Última fecha en que se leyó el inodo sin modificarlo: "<<ino[i].i_atime<<endl;
+        cout<<"Fecha en la que se creó el inodo: "<<ino[i].i_ctime<<endl;
+        cout<<"Última fecha en la que de modificación del inodo: "<<ino[i].i_mtime<<endl;
+        for (int j = 0; j < 15; ++j) {
+            if(j<12){
+                cout<<"AD"<<j<<": "<<ino[i].i_block[j]<<endl;
+            }else{
+                cout<<"AI"<<j<<": "<<ino[i].i_block[j]<<endl;
+            }
+
+        }
+        cout<<"Archivo o carpeta: "<<ino[i].i_type<<endl;
+    }*/
+
 
 }
 
@@ -142,11 +239,3 @@ particionMontada devolverParticionMontada(char id[16]) {
     return retorno;
 }
 
-void fechActual(times fecha) {
-    time_t     now = time(0);
-    struct tm  tstruct;
-    char       buf[80];
-    tstruct = *localtime(&now);
-    strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
-    strcpy(fecha,buf);
-}

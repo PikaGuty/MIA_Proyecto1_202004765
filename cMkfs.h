@@ -22,5 +22,9 @@ void crear_ext3(mnt_nodo mountNodo, int n, int inicioParticion);
 superBloque sb_inicializar(int n, times tiempo, int inicio);
 void inodos_escribir(int inicio, int n, char ruta[512], inodo aux[]);
 void inodos_leer(int inicio, int n, char ruta[512], inodo *aux);
+bloqueCarpeta  blocksC_leer(int inicio, int n, char ruta[512], bloqueCarpeta aux);
+void blocksC_escribir(int inicio, int n, char ruta[512], bloqueCarpeta aux);
+void blocksA_leer(int inicio, int n, char ruta[512], bloqueCarpeta aux);
+void blocksA_escribir(int inicio, int n, char ruta[512], bloqueCarpeta aux);
 
 #endif //MIA_PROYECTO1_202004765_CMKFS_H
