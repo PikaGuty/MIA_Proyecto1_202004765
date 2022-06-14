@@ -4,18 +4,54 @@
 
 #include "cMkdir.h"
 
-particionMontada devolverParticionMontada(char id[16]);
+
 void fechActual(char fecha[128]);
-void crearRoot(char id[16]);
-void verSB(superBloque sb);
+datosBusquedaCarpeta buscarCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512]);
+datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512]);
 
 void cMkdir(char path[512], char id[16], bool p){
-    particionMontada m= devolverParticionMontada(id);
+    //particionMontada m= devolverParticionMontada(id);
+    superBloque sb = sb_retornar(id); //Obteniendo super bloque
+    mnt_nodo mountNodo = retornarNodoMount(id); //Obteniendo nodo de la partición montada
+
+    string auxf = path;
+    size_t pos = 0;
+    string res = "";
+    auxf.erase(0, pos+1);
+
+    int n = sb.s_inodes_count; //Total de inodos
+    inodo ino[n];
+    inodos_leer(sb.s_inode_start,n,mountNodo.mnt_ruta,ino); //Obteniendo la lista de inodos en el sistema
+
+    inodo inodoActual=ino[0];
+    datosBusquedaCarpeta busqueda;
+    char carpe[32]="";
+    while ((pos = auxf.find("/")) != string::npos) {
+        //cout<<"Carpeta "<<auxf.substr(0, pos)<<endl; //Carpetas que hay que verificar que existan o crearlas
+
+        strcpy(carpe,auxf.substr(0, pos).c_str());
+
+        busqueda=buscarCarpeta(carpe, inodoActual, p, n,mountNodo.mnt_ruta);
+
+        auxf.erase(0, pos + 1); //eliminamos del buffer la carpeta que estabamos buscando
+        if(busqueda.encontrada==true){
+            inodoActual = busqueda.inod; //Cambiamos de inodo actual para seguir buscando o crear la carpeta que interesa
+        }else{
+            if(p==true){
+                crearCarpeta(carpe, inodoActual, p, n,mountNodo.mnt_ruta);
+            }else{
+                cout<<"Error: No existe la carpeta "<<carpe<<endl;
+            }
+        }
+    }
+
+    //cout<<"Carpeta "<<auxf.substr(0, pos)<<endl; //Carpeta a crear
+    crearCarpeta(carpe, inodoActual, p, n,mountNodo.mnt_ruta);
 
 
-    crearRoot(id);
 
-    superBloque sb = sb_retornar(id);
+
+    /*superBloque sb = sb_retornar(id);
     mnt_nodo mountNodo = retornarNodoMount(id);
     int n = sb.s_inodes_count; //Total de inodos
     inodo ino[n];
@@ -63,19 +99,55 @@ void cMkdir(char path[512], char id[16], bool p){
         }
 
     }
-    cout<<"Tipo: "<<ino[0].i_type<<endl;
+    cout<<"Tipo: "<<ino[0].i_type<<endl;*/
 
+}
 
+datosBusquedaCarpeta buscarCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512]){
+    datosBusquedaCarpeta res;
+    res.encontrada=false;
+    for (int i = 0; i < sizeof(inodoActual.i_block); i++) { //Buscando primer nodo
+        if(inodoActual.i_block[i]!=-1){ //buscando el primer ocupado
+            bloqueCarpeta bloque;
+            bloque = blocksC_leer(inodoActual.i_block[i], n, ruta, bloque);
+            for (int j = 0; j < 4; ++j) {
+                if (strcmp(bloque.b_content[j].b_name,carpeta) == 0){ //Verificando si existe en este bloque
+                    res.encontrada=true;
+                    res.inod = inodos_leer1(bloque.b_content[j].b_inodo, n, ruta, res.inod);
+                    break;
+                }
 
-    //
-    /*
-    cout<<"------------------ ParticionMontada: Id="<<m.id<<" ------------------"<<endl;
-    cout<<"\t\tRuta: "<<m.ruta<<endl;
-    cout<<"\t\tNombre: "<<m.part_name<<endl;
-    cout<<"\t\tTiempoDeMontaje: "<<m.part_time<<endl;
-    cout<<"\t\tTipo = "<< m.part_type<<"\tInicio= "<<m.part_inicio<<"\tTamño= "<<m.part_tamano<<endl;
-    cout<<"\t\tColcn= "<<m.part_colocacion<<"\tEspEbr= "<<m.part_espacioEbr<<"\tStatus= "<<m.part_status<<endl;
-    */
+            }
+        }
+        if(res.encontrada==true){
+            break;
+        }
+    }
+    return res;
+}
+
+datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512]){
+    datosBusquedaCarpeta res;
+    res.encontrada=false;
+    bool lleno = true;
+    for (int i = 0; i < sizeof(inodoActual.i_block); i++) { //Buscando primer nodo
+        if(inodoActual.i_block[i]!=-1){ //buscando el primer ocupado
+            bloqueCarpeta bloque;
+            bloque = blocksC_leer(inodoActual.i_block[i], n, ruta, bloque);
+            for (int j = 0; j < 4; ++j) {
+                if (bloque.b_content[j].b_inodo==-1){ //Buscando el primer espacio libre
+                    strcpy(bloque.b_content[j].b_name,carpeta);
+                    lleno=false;
+                    break;
+                }
+
+            }
+        }
+        if(res.encontrada==true){
+            break;
+        }
+    }
+    return res;
 }
 
 void crearRoot(char id[16]) {
@@ -186,6 +258,8 @@ void verSB(superBloque sb){
     cout<<"Inicio tabla de bloques: "<<sb.s_block_start<<endl;
     cout<<"Padre: "<<sb.s_bjpurfree<<endl;
 }
+
+
 
 particionMontada devolverParticionMontada(char id[16]) {
     mnt_nodo mountNodo = retornarNodoMount(id);

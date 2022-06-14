@@ -9,6 +9,7 @@
 #include <iostream>
 #include "StructsDatos.h"
 #include "cMount.h"
+#include "cMkdir.h"
 
 void cMkfs(int add, char id[16], char unit[16], char type[16]);
 void sb_escribir(char ruta[512], int inicio, superBloque sb);
@@ -26,5 +27,6 @@ bloqueCarpeta  blocksC_leer(int inicio, int n, char ruta[512], bloqueCarpeta aux
 void blocksC_escribir(int inicio, int n, char ruta[512], bloqueCarpeta aux);
 void blocksA_leer(int inicio, int n, char ruta[512], bloqueCarpeta aux);
 void blocksA_escribir(int inicio, int n, char ruta[512], bloqueCarpeta aux);
+inodo inodos_leer1(int inicio, int n, char ruta[512], inodo aux);
 
 #endif //MIA_PROYECTO1_202004765_CMKFS_H

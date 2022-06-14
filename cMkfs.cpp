@@ -80,10 +80,19 @@ void cMkfs(int add, char id[16], char unitt[16], char type[16]){
                 crear_ext3(particion, n, part_inicio + pimerEspacioEBR); //creando los sectores, super bloque, inodos
 
                 actualizarStatus(path, nombre, '2');
+
+                crearRoot(id);
+
+                /*superBloque sb = sb_retornar(id); //Obteniendo super bloque
+                mnt_nodo mountNodo = retornarNodoMount(id); //Obteniendo nodo de la partición montada
+
+                bmBloque agrregloBmb[n * 3];
+                bmb_leer(sb.s_bm_block_start, n, mountNodo.mnt_ruta, agrregloBmb);
+                for (int u = 0; u < 3 * n; u++) {
+                    cout<<"s "<<agrregloBmb[u].status<<endl;
+                }*/
             }
             cout << "\t...................Se ha formateado la partición................" << endl;
-            //TODO  crear la raíz por que si no voy a pisar
-
     }
 }
 
@@ -104,6 +113,7 @@ void crear_ext3(mnt_nodo mountNodo, int n, int inicioParticion) {
     for (u = 0; u < 3 * n; u++) {
         agrregloBmb[u] = bmb;
     }
+    agrregloBmb[0].status='1';
     bmb_escribir(sb.s_bm_block_start, n, mountNodo.mnt_ruta, agrregloBmb);
 
     //Bit map de inodos
@@ -114,6 +124,7 @@ void crear_ext3(mnt_nodo mountNodo, int n, int inicioParticion) {
     for (l = 0; l < n; l++) {
         bmi[l] = bm;
     }
+    bmi[0].status='1';
     bmi_escribir(sb.s_bm_inode_start, n, mountNodo.mnt_ruta, bmi);
 
 
@@ -607,6 +618,43 @@ void inodos_leer(int inicio, int n, char ruta[512], inodo *aux) {
         }
         fclose(f);
     }
+}
+inodo inodos_leer1(int inicio, int n, char ruta[512], inodo aux) {
+    string auxf = ruta;
+    size_t pos = 0;
+    string res = "";
+    while ((pos = auxf.find("/")) != string::npos) {
+        res += auxf.substr(0, pos) + "/";
+        auxf.erase(0, pos + 1);
+    }
+
+    string nombree = "";
+    pos = auxf.find(".");
+    nombree += auxf.substr(0, pos);
+    auxf.erase(0, pos + 1);
+
+    char ruta2[512] = "";
+    strcpy(ruta2, res.c_str());
+    strcat(ruta2, nombree.c_str());
+    strcat(ruta2, "_rd.dsk");
+
+    FILE *f;
+    if ((f = fopen(ruta, "r+b")) == NULL) {
+        if ((f = fopen(ruta2, "r+b")) == NULL) {
+            cout<<"Error: no se pudo abrir el disco!"<<endl;
+        } else {
+            fseek(f, inicio, SEEK_SET);
+            fread(&aux, sizeof (inodo), 1, f);
+
+            fclose(f);
+        }
+    } else {
+        fseek(f, inicio, SEEK_SET);
+        fread(&aux, sizeof (inodo), 1, f);
+
+        fclose(f);
+    }
+    return aux;
 }
 
 //Estos son para meter solo 1

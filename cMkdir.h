@@ -13,6 +13,9 @@
 #include <unistd.h>
 
 void cMkdir(char path[512], char id[16], bool p);
+particionMontada devolverParticionMontada(char id[16]);
+void crearRoot(char id[16]);
+void verSB(superBloque sb);
 
 
 #endif //MIA_PROYECTO1_202004765_CMKDIR_H

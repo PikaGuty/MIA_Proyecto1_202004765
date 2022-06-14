@@ -20,6 +20,11 @@ typedef struct{
 } datos_crearFDISK;
 
 typedef struct{
+    bool encontrada;
+    inodo inod;
+}datosBusquedaCarpeta;
+
+typedef struct{
     char part_type;
     char part_fit;
     int part_start;
