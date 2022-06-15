@@ -7,7 +7,8 @@
 
 void fechActual(char fecha[128]);
 datosBusquedaCarpeta buscarCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512]);
-datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512],superBloque sb,mnt_nodo mountNodo);
+datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512],superBloque sb,mnt_nodo mountNodo, char id[16]);
+void actualizarBMI(int posIni, int posAct, char id[16]);
 
 void cMkdir(char path[512], char id[16], bool p){
     //particionMontada m= devolverParticionMontada(id);
@@ -39,7 +40,7 @@ void cMkdir(char path[512], char id[16], bool p){
             inodoActual = busqueda.inod; //Cambiamos de inodo actual para seguir buscando o crear la carpeta que interesa
         }else{
             if(p==true){
-                creada = crearCarpeta(carpe, inodoActual, p, n,mountNodo.mnt_ruta,sb,mountNodo);
+                creada = crearCarpeta(carpe, inodoActual, p, n,mountNodo.mnt_ruta,sb,mountNodo, id);
                 if (creada.encontrada==true){
                     inodoActual = creada.inod;
                 }
@@ -53,7 +54,7 @@ void cMkdir(char path[512], char id[16], bool p){
     if(busqueda.encontrada==true) {
         //cout<<"Carpeta "<<auxf.substr(0, pos)<<endl; //Carpeta a crear
         strcpy(carpe, auxf.substr(0, pos).c_str());
-        crearCarpeta(carpe, inodoActual, p, n, mountNodo.mnt_ruta, sb, mountNodo);
+        crearCarpeta(carpe, inodoActual, p, n, mountNodo.mnt_ruta, sb, mountNodo, id);
     }
 
 
@@ -132,7 +133,7 @@ datosBusquedaCarpeta buscarCarpeta(char carpeta[12], inodo inodoActual, bool p, 
     return res;
 }
 
-datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512],superBloque sb,mnt_nodo mountNodo){
+datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512],superBloque sb,mnt_nodo mountNodo, char id[16]){
     datosBusquedaCarpeta res;
     res.encontrada=false;
     bool lleno = true;
@@ -166,6 +167,7 @@ datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, i
                     ino.i_type='0';
                     inodos_escribir1(sb.s_first_ino, n, mountNodo.mnt_ruta, ino);
                     res.inod=inodos_leer1(sb.s_first_ino, n, mountNodo.mnt_ruta, ino);
+                    actualizarBMI(sb.s_inode_start, sb.s_first_ino, id);
                     //*****************************
                     //CREANDO PRIMER BLOQUE PARA EL NUEVO INODO
                     bloqueCarpeta blocks;
@@ -215,6 +217,20 @@ datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, i
         }
     }
     return res;
+}
+
+void actualizarBMI(int posIni, int posAct, char id[16]){
+    superBloque sb = sb_retornar(id);
+    mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
+
+    int posicion = (posAct-posIni)/(sizeof(inodo)+1);
+
+    int n = sb.s_inodes_count; //Total de inodos
+    bmInodo bm_Inodos[n];
+    bmi_leer(sb.s_bm_inode_start, n, mountNodo.mnt_ruta, bm_Inodos);
+
+    bm_Inodos[posicion].status='1';
+    bmi_escribir(sb.s_bm_inode_start,n,mountNodo.mnt_ruta,bm_Inodos);
 }
 
 void crearRoot(char id[16]) {
@@ -322,7 +338,7 @@ void verSB(superBloque sb){
     cout<<"Inicio del bitmap bloques: "<<sb.s_bm_block_start<<endl;
     cout<<"Inicio tabla de inodos: "<<sb.s_inode_start<<endl;
     cout<<"Inicio tabla de bloques: "<<sb.s_block_start<<endl;
-    cout<<"Padre: "<<sb.s_bjpurfree<<endl;
+    //cout<<"Padre: "<<sb.s_bjpurfree<<endl;
 }
 
 

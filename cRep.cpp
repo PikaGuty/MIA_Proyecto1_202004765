@@ -11,6 +11,7 @@ bool escribirDOT(string dot, char pathCe[512], char pathC[512], char extension[6
 void rMBR(char path[512], char nombre[16], char extension[6], char id[64]);
 void rDISK(char path[512], char nombre[16], char extension[6], char id[16]);
 void rSB(char path[512], char nombre[16], char extension[6], char id[16]);
+void rBMI(char path[512], char nombre[16], char extension[6], char id[16]);
 
 void reportes(char path[512], char namee[64], char id[64]){
     string nam = namee;
@@ -54,7 +55,7 @@ void reportes(char path[512], char namee[64], char id[64]){
     }else if(nam=="bm_block"){
         //TODO reporte block
     }else if(nam=="bm_inode"){
-        //TODO reporte bminode
+        rBMI(ruta, nombre, extension, id);
     }else if(nam=="inode"){
         //TODO reporte inode
     }else if(nam=="journaling"){
@@ -782,6 +783,108 @@ void rSB(char path[512], char nombre[16], char extension[6], char id[16]){
            "    }";
 
 
+    char rutaCe[512],rutaC[512];
+    strcpy(rutaCe,path);
+    strcat(rutaCe,nombre);
+    strcat(rutaCe,".");
+    strcpy(rutaC,rutaCe);
+    strcat(rutaCe,extension);
+    escribirDOT(dot,rutaCe,rutaC,extension);
+}
+
+void rBMI(char path[512], char nombre[16], char extension[6], char id[16]){
+    superBloque sb = sb_retornar(id);
+    mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
+
+    int n = sb.s_inodes_count; //Total de inodos
+    bmInodo bm_Inodos[n];
+    bmi_leer(sb.s_bm_inode_start, n, mountNodo.mnt_ruta, bm_Inodos);
+
+    string dot="digraph G { \n"
+               "\n"
+               "    label=<\n"
+               "    <TABLE border=\"3\" bgcolor=\"#60D394\" >\n"
+               "    \n"
+               "    <TR><TD border=\"2\"  bgcolor=\"#EE6055\" gradientangle=\"315\" colspan=\"15\" >Bitmap de inodos</TD></TR>\n"
+               "    \n";
+
+    for (int i = 0; i < n ; i++) {
+        if((i%15)==0){
+            dot+="<TR>\n";
+        }
+        if((i%2)==0){
+            dot+="<TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">";
+            dot+=bm_Inodos[i].status;
+            dot+="Y";
+            dot+= to_string((1+i));
+            dot+="</TD>\n";
+        }else{
+            dot+="<TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+            dot+=bm_Inodos[i].status;
+            dot+="Y";
+            dot+= to_string((1+i));
+            dot+="</TD>\n";
+        }
+        if((i%15)==14){
+            dot+="</TR>\n\n";
+        }
+    }
+    dot+="</TR>\n\n";
+    dot+="\n"
+         "    </TABLE>>\n"
+         "    \n"
+         "    }";
+    char rutaCe[512],rutaC[512];
+    strcpy(rutaCe,path);
+    strcat(rutaCe,nombre);
+    strcat(rutaCe,".");
+    strcpy(rutaC,rutaCe);
+    strcat(rutaCe,extension);
+    escribirDOT(dot,rutaCe,rutaC,extension);
+}
+
+void rBMB(char path[512], char nombre[16], char extension[6], char id[16]){
+    superBloque sb = sb_retornar(id);
+    mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
+
+    int n = sb.s_inodes_count; //Total de inodos
+    bmBloque bm_bloque[n];
+    bmb_leer(sb.s_bm_inode_start, n, mountNodo.mnt_ruta, bm_bloque);
+
+    string dot="digraph G { \n"
+               "\n"
+               "    label=<\n"
+               "    <TABLE border=\"3\" bgcolor=\"#60D394\" >\n"
+               "    \n"
+               "    <TR><TD border=\"2\"  bgcolor=\"#EE6055\" gradientangle=\"315\" colspan=\"15\" >Bitmap de Bloques</TD></TR>\n"
+               "    \n";
+
+    for (int i = 0; i < n ; i++) {
+        if((i%15)==0){
+            dot+="<TR>\n";
+        }
+        if((i%2)==0){
+            dot+="<TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">";
+            dot+=bm_bloque[i].status;
+            dot+="Y";
+            dot+= to_string((1+i));
+            dot+="</TD>\n";
+        }else{
+            dot+="<TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+            dot+=bm_bloque[i].status;
+            dot+="Y";
+            dot+= to_string((1+i));
+            dot+="</TD>\n";
+        }
+        if((i%15)==14){
+            dot+="</TR>\n\n";
+        }
+    }
+    dot+="</TR>\n\n";
+    dot+="\n"
+         "    </TABLE>>\n"
+         "    \n"
+         "    }";
     char rutaCe[512],rutaC[512];
     strcpy(rutaCe,path);
     strcat(rutaCe,nombre);

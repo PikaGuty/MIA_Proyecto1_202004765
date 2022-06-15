@@ -76,7 +76,6 @@ typedef struct{
     int s_bm_block_start;   //Guardará el inicio del bitmap de bloques
     int s_inode_start;      //Guardará el inicio de la tabla de inodos
     int s_block_start;      //Guardará el inico de la tabla de bloques
-    int s_bjpurfree;        //El padre
 }superBloque;
 
 typedef struct{

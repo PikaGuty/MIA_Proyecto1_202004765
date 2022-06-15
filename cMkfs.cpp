@@ -183,7 +183,7 @@ superBloque sb_inicializar(int n, times tiempo, int inicio) {//inicializo las va
 
     sb.s_inode_start = inicio + sizeof (superBloque) + n * sizeof (journalie) + 3 * n + n;
     sb.s_block_start = sb.s_inode_start + n * sizeof (inodo);
-    sb.s_bjpurfree = inicio + sizeof (superBloque);
+    //sb.s_bjpurfree = inicio + sizeof (superBloque);
 
     return sb;
 }
