@@ -6,6 +6,8 @@
 
 void fechActual(times fecha);
 
+using namespace std;
+
 void cMkfs(int add, char id[16], char unitt[16], char type[16]){
 
     char unit;
@@ -617,6 +619,43 @@ void inodos_leer(int inicio, int n, char ruta[512], inodo *aux) {
         fclose(f);
     }
 }
+inodo inodos_leer1(int inicio, int n, char ruta[512], inodo aux) {
+    string auxf = ruta;
+    size_t pos = 0;
+    string res = "";
+    while ((pos = auxf.find("/")) != string::npos) {
+        res += auxf.substr(0, pos) + "/";
+        auxf.erase(0, pos + 1);
+    }
+
+    string nombree = "";
+    pos = auxf.find(".");
+    nombree += auxf.substr(0, pos);
+    auxf.erase(0, pos + 1);
+
+    char ruta2[512] = "";
+    strcpy(ruta2, res.c_str());
+    strcat(ruta2, nombree.c_str());
+    strcat(ruta2, "_rd.dsk");
+
+    FILE *f;
+    if ((f = fopen(ruta, "r+b")) == NULL) {
+        if ((f = fopen(ruta2, "r+b")) == NULL) {
+            cout<<"Error: no se pudo abrir el disco!"<<endl;
+        } else {
+            fseek(f, inicio, SEEK_SET);
+            fread(&aux, sizeof (inodo), 1, f);
+
+            fclose(f);
+        }
+    } else {
+        fseek(f, inicio, SEEK_SET);
+        fread(&aux, sizeof (inodo), 1, f);
+
+        fclose(f);
+    }
+    return aux;
+}
 inodo inodos_escribir1(int inicio, int n, char ruta[512], inodo aux) {
     string auxf = ruta;
     size_t pos = 0;
@@ -656,43 +695,6 @@ inodo inodos_escribir1(int inicio, int n, char ruta[512], inodo aux) {
     }
     if(pos1 == false && pos2==false){
         cout<<"Error: no se pudo abrir el disco!"<<endl;
-    }
-    return aux;
-}
-inodo inodos_leer1(int inicio, int n, char ruta[512], inodo aux) {
-    string auxf = ruta;
-    size_t pos = 0;
-    string res = "";
-    while ((pos = auxf.find("/")) != string::npos) {
-        res += auxf.substr(0, pos) + "/";
-        auxf.erase(0, pos + 1);
-    }
-
-    string nombree = "";
-    pos = auxf.find(".");
-    nombree += auxf.substr(0, pos);
-    auxf.erase(0, pos + 1);
-
-    char ruta2[512] = "";
-    strcpy(ruta2, res.c_str());
-    strcat(ruta2, nombree.c_str());
-    strcat(ruta2, "_rd.dsk");
-
-    FILE *f;
-    if ((f = fopen(ruta, "r+b")) == NULL) {
-        if ((f = fopen(ruta2, "r+b")) == NULL) {
-            cout<<"Error: no se pudo abrir el disco!"<<endl;
-        } else {
-            fseek(f, inicio, SEEK_SET);
-            fread(&aux, sizeof (inodo), 1, f);
-
-            fclose(f);
-        }
-    } else {
-        fseek(f, inicio, SEEK_SET);
-        fread(&aux, sizeof (inodo), 1, f);
-
-        fclose(f);
     }
     return aux;
 }

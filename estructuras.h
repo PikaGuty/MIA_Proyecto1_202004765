@@ -5,7 +5,7 @@
 #ifndef MIA_PROYECTO1_202004765_ESTRUCTURAS_H
 #define MIA_PROYECTO1_202004765_ESTRUCTURAS_H
 
-//#include <iostream>
+#include <iostream>
 #include <string.h>
 #include <time.h>
 

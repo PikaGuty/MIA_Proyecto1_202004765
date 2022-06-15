@@ -7,7 +7,7 @@
 
 #include <iostream>
 #include <string.h>
-//#include <algorithm>
+#include <algorithm>
 #include <fstream>
 #include <cstdlib>
 #include <math.h>
@@ -19,7 +19,7 @@
 #include "cMount.h"
 #include "cMkfs.h"
 
-//using namespace std;
+using namespace std;
 
 void reportes(char path[512], char name[64], char id[64]);
 
