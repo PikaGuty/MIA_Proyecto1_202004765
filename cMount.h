@@ -10,6 +10,7 @@
 #include "metodosGenerales.h"
 #include "CFdisk.h"
 #include <string.h>
+#include <string>
 
 using namespace std;
 

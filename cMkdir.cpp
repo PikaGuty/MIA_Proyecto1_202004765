@@ -7,7 +7,8 @@
 
 void fechActual(char fecha[128]);
 datosBusquedaCarpeta buscarCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512]);
-datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512]);
+datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512],superBloque sb,mnt_nodo mountNodo);
+void agregar_a_Bloque(int inicio, int n, char ruta[512], bloqueCarpeta aux);
 
 void cMkdir(char path[512], char id[16], bool p){
     //particionMontada m= devolverParticionMontada(id);
@@ -23,8 +24,8 @@ void cMkdir(char path[512], char id[16], bool p){
     inodo ino[n];
     inodos_leer(sb.s_inode_start,n,mountNodo.mnt_ruta,ino); //Obteniendo la lista de inodos en el sistema
 
-    inodo inodoActual=ino[0];
-    datosBusquedaCarpeta busqueda;
+    /*inodo inodoActual=ino[0];
+    datosBusquedaCarpeta busqueda, crea;
     char carpe[32]="";
     while ((pos = auxf.find("/")) != string::npos) {
         //cout<<"Carpeta "<<auxf.substr(0, pos)<<endl; //Carpetas que hay que verificar que existan o crearlas
@@ -38,7 +39,8 @@ void cMkdir(char path[512], char id[16], bool p){
             inodoActual = busqueda.inod; //Cambiamos de inodo actual para seguir buscando o crear la carpeta que interesa
         }else{
             if(p==true){
-                crearCarpeta(carpe, inodoActual, p, n,mountNodo.mnt_ruta);
+                crearCarpeta(carpe, inodoActual, p, n,mountNodo.mnt_ruta, sb, mountNodo);
+                inodoActual= busqueda.inod;
             }else{
                 cout<<"Error: No existe la carpeta "<<carpe<<endl;
             }
@@ -46,15 +48,10 @@ void cMkdir(char path[512], char id[16], bool p){
     }
 
     //cout<<"Carpeta "<<auxf.substr(0, pos)<<endl; //Carpeta a crear
-    crearCarpeta(carpe, inodoActual, p, n,mountNodo.mnt_ruta);
+    crearCarpeta(carpe, inodoActual, p, n,mountNodo.mnt_ruta,sb,mountNodo);*/
 
 
 
-
-    /*superBloque sb = sb_retornar(id);
-    mnt_nodo mountNodo = retornarNodoMount(id);
-    int n = sb.s_inodes_count; //Total de inodos
-    inodo ino[n];
     inodos_leer(sb.s_inode_start,n,mountNodo.mnt_ruta,ino);
 
     cout<<"UID del usuario: "<<ino[0].i_uid<<endl;
@@ -67,7 +64,6 @@ void cMkdir(char path[512], char id[16], bool p){
         if(j<12){
             cout<<"AD"<<j<<": "<<ino[0].i_block[j]<<endl;
             if(ino[0].i_block[j]!=-1){
-                cout<<"ESCRIBIR 2 "<<ino[0].i_block[j]<<endl;
                 cout<<"********************************** CARPETA **********************************"<<endl;
                 bloqueCarpeta carpeta=blocksC_leer(ino[0].i_block[j],n,mountNodo.mnt_ruta,carpeta);
                 cout<<"Nombre 1: "<<carpeta.b_content[0].b_name<<endl;
@@ -99,10 +95,11 @@ void cMkdir(char path[512], char id[16], bool p){
         }
 
     }
-    cout<<"Tipo: "<<ino[0].i_type<<endl;*/
+    cout<<"Tipo: "<<ino[0].i_type<<endl;
 
 }
 
+/*
 datosBusquedaCarpeta buscarCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512]){
     datosBusquedaCarpeta res;
     res.encontrada=false;
@@ -126,28 +123,102 @@ datosBusquedaCarpeta buscarCarpeta(char carpeta[12], inodo inodoActual, bool p, 
     return res;
 }
 
-datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512]){
+datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512],superBloque sb,mnt_nodo mountNodo){
     datosBusquedaCarpeta res;
     res.encontrada=false;
     bool lleno = true;
-    for (int i = 0; i < sizeof(inodoActual.i_block); i++) { //Buscando primer nodo
+    for (int i = 0; i < sizeof(inodoActual.i_block); i++) { //Buscando inodoAcrual
         if(inodoActual.i_block[i]!=-1){ //buscando el primer ocupado
             bloqueCarpeta bloque;
             bloque = blocksC_leer(inodoActual.i_block[i], n, ruta, bloque);
             for (int j = 0; j < 4; ++j) {
                 if (bloque.b_content[j].b_inodo==-1){ //Buscando el primer espacio libre
                     strcpy(bloque.b_content[j].b_name,carpeta);
+                    //TODO crear inodo
+
+                    //ACTUALIZANDO BLOQUE EXISTENTE
+                    strcpy(bloque.b_content[j].b_name,carpeta);
+                    bloque.b_content[j].b_inodo=sb.s_first_ino;
+                    blocksC_escribir(inodoActual.i_block[i],n,ruta,bloque);
+                    //*****************************
+
+                    //CREANDO NUEVO INODO
+                    inodo ino;
+
+                    times fech;
+                    fechActual(fech);
+                    ino.i_uid = 1;
+                    ino.i_gid = 1;
+                    ino.i_size = 0;
+                    strcpy(ino.i_atime,"");
+                    strcpy(ino.i_ctime,fech);
+                    strcpy(ino.i_mtime,fech);
+                    ino.i_block[0]=sb.s_first_blo;
+                    for (int j = 1; j < 15; ++j) {
+                        ino.i_block[j]=-1;
+                    }
+                    ino.i_type='0';
+                    inodos_escribir1(sb.s_first_ino, n, mountNodo.mnt_ruta, ino);
+                    //*****************************
+
+                    //CREANDO PRIMER BLOQUE PARA EL NUEVO INODO
+                    bloqueCarpeta blocks;
+                    strcpy(blocks.b_content[0].b_name,".");
+                    blocks.b_content[0].b_inodo = sb.s_first_ino;
+                    strcpy(blocks.b_content[1].b_name,"..");
+                    blocks.b_content[1].b_inodo = bloque.b_content[0].b_inodo;
+                    strcpy(blocks.b_content[2].b_name,"");
+                    blocks.b_content[2].b_inodo = -1;
+                    strcpy(blocks.b_content[3].b_name,"");
+                    blocks.b_content[3].b_inodo = -1;
+                    blocksC_escribir(sb.s_first_blo, n, mountNodo.mnt_ruta, blocks);
+
+                    //*****************************
+
+                    //ACTUALIZANDO SUPERBLOQUE
+                    sb.s_free_blocks_counts--;
+                    sb.s_free_inodes_count--;
+                    sb.s_first_ino=sb.s_first_ino+sizeof(inodo)+1;
+                    sb.s_first_blo=sb.s_first_blo+sizeof(bloqueCarpeta)+1;
+
+                    int inicio=0;
+                    if (mountNodo.mnt_particion.part_fit == 'B' || mountNodo.mnt_particion.part_fit == 'F' || mountNodo.mnt_particion.part_fit == 'W') {//es primaria
+                        inicio = mountNodo.mnt_particion.part_start;
+                    } else {//del ebr
+                        inicio = mountNodo.mnt_ebr.part_start;
+                    }
+
+                    sb_escribir(mountNodo.mnt_ruta,inicio,sb);
+                    //*************************
                     lleno=false;
                     break;
                 }
 
             }
+        }else{
+            if(lleno==true){
+
+            }
         }
-        if(res.encontrada==true){
+        if(lleno==false){
             break;
         }
     }
+    if (lleno==true){
+        for (int i = 0; i < sizeof(inodoActual.i_block); i++) { //Buscando inodo actual
+            if(inodoActual.i_block[i]==-1){ //buscando el primer libre
+                //TODO crear bloque crear inodo y primer bloque
+
+            }
+        }
+    }
+
     return res;
+}
+ */
+
+void agregar_a_Bloque(int inicio, int n, char ruta[512], bloqueCarpeta aux){
+
 }
 
 void crearRoot(char id[16]) {
