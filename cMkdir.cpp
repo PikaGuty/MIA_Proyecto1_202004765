@@ -205,7 +205,7 @@ datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, i
 
                     lleno=false;
                     res.encontrada = true;
-                    cout<<"\t................ Creando carpeta ................"<<carpeta<<endl;
+                    cout<<"\t................ Creando carpeta "<<carpeta<<" ................"<<endl;
 
                     break;
                 }
@@ -309,7 +309,7 @@ datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, i
 
                 lleno=false;
                 res.encontrada = true;
-                cout<<"\t................ Creando carpeta ................"<<carpeta<<endl;
+                cout<<"\t................ Creando carpeta "<<carpeta<<" ................"<<endl;
 
                 break;
             }
