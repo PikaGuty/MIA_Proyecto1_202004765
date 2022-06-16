@@ -99,6 +99,10 @@ typedef struct{
     char Padre[12];
 }journalie;
 
+typedef struct{
+    int b_pointers[16];
+}bloqueApuntadores;
+
 typedef struct {
     char part_type;//e o p
     int part_inicio;//inicio

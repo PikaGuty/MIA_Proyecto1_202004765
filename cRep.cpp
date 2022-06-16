@@ -12,6 +12,8 @@ void rMBR(char path[512], char nombre[16], char extension[6], char id[64]);
 void rDISK(char path[512], char nombre[16], char extension[6], char id[16]);
 void rSB(char path[512], char nombre[16], char extension[6], char id[16]);
 void rBMI(char path[512], char nombre[16], char extension[6], char id[16]);
+void rBMB(char path[512], char nombre[16], char extension[6], char id[16]);
+void rINODE(char path[512], char nombre[16], char extension[6], char id[16]);
 
 void reportes(char path[512], char namee[64], char id[64]){
     string nam = namee;
@@ -51,13 +53,13 @@ void reportes(char path[512], char namee[64], char id[64]){
     }else if(nam=="disk"){
         rDISK(ruta, nombre, extension, id);
     }else if(nam=="block"){
-        //TODO reporte block
+        rBLOCK(ruta, nombre, extension, id);
     }else if(nam=="bm_block"){
-        //TODO reporte block
+        rBMB(ruta, nombre, extension, id);
     }else if(nam=="bm_inode"){
         rBMI(ruta, nombre, extension, id);
     }else if(nam=="inode"){
-        //TODO reporte inode
+        rINODE(ruta, nombre, extension, id);
     }else if(nam=="journaling"){
         //TODO reporte journaling
     }else if(nam=="tree"){
@@ -866,13 +868,13 @@ void rBMB(char path[512], char nombre[16], char extension[6], char id[16]){
         if((i%2)==0){
             dot+="<TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">";
             dot+=bm_bloque[i].status;
-            dot+="Y";
+            dot+="B";
             dot+= to_string((1+i));
             dot+="</TD>\n";
         }else{
             dot+="<TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
             dot+=bm_bloque[i].status;
-            dot+="Y";
+            dot+="B";
             dot+= to_string((1+i));
             dot+="</TD>\n";
         }
@@ -885,6 +887,245 @@ void rBMB(char path[512], char nombre[16], char extension[6], char id[16]){
          "    </TABLE>>\n"
          "    \n"
          "    }";
+    char rutaCe[512],rutaC[512];
+    strcpy(rutaCe,path);
+    strcat(rutaCe,nombre);
+    strcat(rutaCe,".");
+    strcpy(rutaC,rutaCe);
+    strcat(rutaCe,extension);
+    escribirDOT(dot,rutaCe,rutaC,extension);
+}
+
+void rINODE(char path[512], char nombre[16], char extension[6], char id[16]){
+    superBloque sb = sb_retornar(id);
+    mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
+
+    int n = sb.s_inodes_count; //Total de inodos
+    int direccionesInodos[1024];
+    obtenerListaBMI(id, direccionesInodos);
+
+    string  dot = "digraph G { \n"
+                  "    \n"
+                  "    node[shape=none]";
+    for (int i = 0; i < 1024; ++i) {
+        if (direccionesInodos[i]!=0){
+            inodo ino;
+            ino = inodos_leer1(sb.s_inode_start, n, mountNodo.mnt_ruta, ino);
+            dot += "inodo";
+            dot += to_string(direccionesInodos[i]);
+            dot += "[label=<<TABLE border=\"3\" bgcolor=\"#60D394\">\n"
+                   "    \n"
+                   "    <TR><TD border=\"2\"  bgcolor=\"#EE6055\" gradientangle=\"315\" colspan=\"2\" >inodo ";
+            dot += to_string(direccionesInodos[i]);
+            dot += "</TD></TR>\n"
+                   "      \n"
+                   "    <TR>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">UID</TD>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+            dot += to_string(ino.i_uid);
+            dot += "</TD>\n"
+                   "    </TR>\n"
+                   "    \n"
+                   "    <TR>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">GID</TD>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+            dot += to_string(ino.i_gid);
+            dot += "</TD>\n"
+                   "    </TR>\n"
+                   "    \n"
+                   "    <TR>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Size</TD>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+            dot += to_string(ino.i_size);
+            dot += "</TD>\n"
+                   "    </TR>\n"
+                   "    \n"
+                   "    <TR>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">atime</TD>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+            dot += ino.i_atime;
+            dot += "</TD>\n"
+                   "    </TR>\n"
+                   "    \n"
+                   "    <TR>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">ctime</TD>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+            dot += ino.i_ctime;
+            dot += "</TD>\n"
+                   "    </TR>\n"
+                   "    \n"
+                   "    <TR>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">mtime</TD>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+            dot += ino.i_mtime;
+            dot += "</TD>\n"
+                   "    </TR>\n"
+                   "    \n";
+
+            for (int j = 0; j < 15; ++j) {
+                dot += "    <TR>\n"
+                       "    <TD border=\"1\"  bgcolor=\"#CC5A71\"   gradientangle=\"315\">block_";
+                dot+= to_string((j+1));
+                dot+="</TD>\n"
+                       "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+                dot += to_string(ino.i_block[j]);
+                dot += "</TD>\n"
+                       "    </TR>\n\n";
+            }
+
+            dot += "    <TR>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">type</TD>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+            dot += ino.i_type;
+            dot += "</TD>\n"
+                   "    </TR>\n"
+                   "\n"
+                   "    </TABLE>>]\n\n";
+        }
+    }
+
+    dot += "}";
+
+    char rutaCe[512],rutaC[512];
+    strcpy(rutaCe,path);
+    strcat(rutaCe,nombre);
+    strcat(rutaCe,".");
+    strcpy(rutaC,rutaCe);
+    strcat(rutaCe,extension);
+    escribirDOT(dot,rutaCe,rutaC,extension);
+}
+
+void rBLOCK(char path[512], char nombre[16], char extension[6], char id[16]){
+    superBloque sb = sb_retornar(id);
+    mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
+
+    int n = sb.s_inodes_count; //Total de inodos
+    int direccionesInodos[1024];
+    obtenerListaBMI(id, direccionesInodos);
+
+    string  dot = "digraph G { \n"
+                  "    \n"
+                  "    node[shape=none]";
+    for (int i = 0; i < 1024; ++i) {
+        if (direccionesInodos[i]!=0){
+            inodo ino;
+            ino = inodos_leer1(sb.s_inode_start, n, mountNodo.mnt_ruta, ino);
+            if(ino.i_type=='0'){
+                for (int j = 0; j < 15; ++j) {
+                    if(ino.i_block[j]!=-1){
+                        if(j<12){
+                            bloqueCarpeta carp;
+                            carp = blocksC_leer(ino.i_block[j],n,mountNodo.mnt_ruta,carp);
+
+                            dot+="carpet";
+                            dot+= to_string(ino.i_block[j]);
+                            dot+="[label=<<TABLE border=\"3\" bgcolor=\"#60D394\">\n"
+                                 "\n"
+                                 "<tr><td border=\"2\" bgcolor=\"#EE6055\" colspan=\"2\">Bloque Carpetas ";
+                            dot+= to_string(ino.i_block[j]);
+                            dot += "</td></tr>\n"
+                                 "\n"
+                                 "<tr>\n"
+                                 "<td border=\"1\" bgcolor=\"#127ABB\">Name</td>\n"
+                                 "<td border=\"1\" bgcolor=\"#127ABB\">Inodo</td>\n"
+                                 "</tr>\n"
+                                 "\n";
+                            for (int k = 0; k < 4; ++k) {
+                                dot+="<tr>\n"
+                                     "<td border=\"1\" bgcolor=\"#F0D7B6\" >";
+                                dot+= carp.b_content[k].b_name;
+                                dot+="</td>\n"
+                                     "<td border=\"1\" bgcolor=\"#F0D7B6\" >";
+                                dot+= to_string(carp.b_content[k].b_inodo);
+                                dot+="</td>\n"
+                                     "</tr>\n\n";
+                            }
+
+
+                            dot+="</TABLE>>]";
+                        }else{
+                            bloqueApuntadores apu;
+                            apu = blocksAp_leer(ino.i_block[j],n,mountNodo.mnt_ruta,apu);
+                            for (int k = 0; k < 16; ++k) {
+                                dot += "pointer";
+                                dot+=to_string(ino.i_block[j]);
+                                dot += "[label=<<TABLE border=\"3\" bgcolor=\"#60D394\">\n"
+                                       "\n"
+                                       "<tr>\n"
+                                       "<td border=\"2\" bgcolor=\"#E74C3C\" color=\"white \" colspan=\"2\">Bloque Apuntadores ";
+                                dot += to_string(ino.i_block[j]);
+                                dot += "</td>\n"
+                                       "</tr>\n"
+                                       "\n";
+
+                                dot += "<tr>\n"
+                                       "<td border=\"1\" bgcolor=\"#127ABB\">Pointer_";
+                                dot += to_string(k+1);
+                                dot += "</td>\n"
+                                       "<td border=\"1\" bgcolor=\"#F0D7B6\">";
+                                dot += to_string(apu.b_pointers[k]);
+                                dot += "</td>\n"
+                                       "</tr>\n\n"
+                                       "</TABLE>>]";
+                            }
+                        }
+                    }
+                }
+            }else{
+                for (int j = 0; j < 15; ++j) {
+                    if(ino.i_block[j]!=-1) {
+                        if (j < 12) {
+                            bloqueArchivo arch;
+                            arch = blocksA_leer(ino.i_block[j], n, mountNodo.mnt_ruta, arch);
+                            dot += "archivo";
+                            dot += to_string(ino.i_block[j]);
+                            dot += "label=<<TABLE border=\"3\" bgcolor=\"#60D394\">\n"
+                                   "\n"
+                                   "<tr><td border=\"2\" bgcolor=\"#EE6055\" >Bloque Archivos ";
+                            dot += to_string(ino.i_block[j]);
+                            dot += "</td></tr>\n"
+                                   "\n"
+                                   "<tr>\n"
+                                   "<td border=\"1\" bgcolor=\"#F0D7B6\" >";
+                            dot += arch.b_content;
+                            dot += "</td>\n"
+                                   "</tr>\n"
+                                   "\n"
+                                   "</TABLE>>]";
+                        } else {
+                            bloqueApuntadores apu;
+                            apu = blocksAp_leer(ino.i_block[j], n, mountNodo.mnt_ruta, apu);
+                            for (int k = 0; k < 16; ++k) {
+                                dot += "pointer";
+                                dot += to_string(ino.i_block[j]);
+                                dot += "[label=<<TABLE border=\"3\" bgcolor=\"#60D394\">\n"
+                                       "\n"
+                                       "<tr>\n"
+                                       "<td border=\"2\" bgcolor=\"#E74C3C\" color=\"white \" colspan=\"2\">Bloque Apuntadores ";
+                                dot += to_string(ino.i_block[j]);
+                                dot += "</td>\n"
+                                       "</tr>\n"
+                                       "\n";
+
+                                dot += "<tr>\n"
+                                       "<td border=\"1\" bgcolor=\"#127ABB\">Pointer_";
+                                dot += to_string(k + 1);
+                                dot += "</td>\n"
+                                       "<td border=\"1\" bgcolor=\"#F0D7B6\">";
+                                dot += to_string(apu.b_pointers[k]);
+                                dot += "</td>\n"
+                                       "</tr>\n\n"
+                                       "</TABLE>>]";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    dot += "}";
+
     char rutaCe[512],rutaC[512];
     strcpy(rutaCe,path);
     strcat(rutaCe,nombre);

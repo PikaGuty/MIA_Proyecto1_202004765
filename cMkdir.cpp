@@ -123,7 +123,6 @@ datosBusquedaCarpeta buscarCarpeta(char carpeta[12], inodo inodoActual, bool p, 
                     res.inod = inodos_leer1(bloque.b_content[j].b_inodo, n, ruta, res.inod);
                     break;
                 }
-
             }
         }
         if(res.encontrada==true){
@@ -233,6 +232,32 @@ void actualizarBMI(int posIni, int posAct, char id[16]){
     bmi_escribir(sb.s_bm_inode_start,n,mountNodo.mnt_ruta,bm_Inodos);
 }
 
+void obtenerListaBMI(char id[16], int direccionesInodos[1024]) {
+    superBloque sb = sb_retornar(id);
+    int posIni = sb.s_inode_start;
+    mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
+
+    int n = sb.s_inodes_count; //Total de inodos
+    bmInodo bm_Inodos[n];
+    bmi_leer(sb.s_bm_inode_start, n, mountNodo.mnt_ruta, bm_Inodos);
+
+    for (int i = 0; i < 1024; ++i) {
+        direccionesInodos[i]=0;
+    }
+
+    for (int i = 0; i < n; i++) {
+        if(bm_Inodos[i].status=='1'){
+            for (int j = 0; j < 1024; j++) {
+                if(direccionesInodos[j]==0){
+                    direccionesInodos[j] = posIni + i * (sizeof (inodo)+1);
+                    //cout<<"Le voy a meter "<<(posIni + i * (sizeof (inodo)+1))<<endl;
+                    break;
+                }
+            }
+        }
+    }
+}
+
 void crearRoot(char id[16]) {
     //primero tengo que obtener el super bloque
     superBloque sb = sb_retornar(id);
@@ -340,8 +365,6 @@ void verSB(superBloque sb){
     cout<<"Inicio tabla de bloques: "<<sb.s_block_start<<endl;
     //cout<<"Padre: "<<sb.s_bjpurfree<<endl;
 }
-
-
 
 particionMontada devolverParticionMontada(char id[16]) {
     mnt_nodo mountNodo = retornarNodoMount(id);

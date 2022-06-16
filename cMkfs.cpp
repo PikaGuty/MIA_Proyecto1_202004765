@@ -824,7 +824,7 @@ void blocksA_escribir(int inicio, int n, char ruta[512], bloqueArchivo aux) {
     }
 
 }
-void blocksA_leer(int inicio, int n, char ruta[512], bloqueCarpeta aux) {
+bloqueArchivo blocksA_leer(int inicio, int n, char ruta[512], bloqueArchivo aux) {
     string auxf = ruta;
     size_t pos = 0;
     string res = "";
@@ -860,6 +860,90 @@ void blocksA_leer(int inicio, int n, char ruta[512], bloqueCarpeta aux) {
 
         fclose(f);
     }
+    return aux;
+
+}
+
+void blocksAp_escribir(int inicio, int n, char ruta[512], bloqueApuntadores aux) {
+    string auxf = ruta;
+    size_t pos = 0;
+    string res = "";
+    while ((pos = auxf.find("/")) != string::npos) {
+        res += auxf.substr(0, pos) + "/";
+        auxf.erase(0, pos + 1);
+    }
+
+    string nombree = "";
+    pos = auxf.find(".");
+    nombree += auxf.substr(0, pos);
+    auxf.erase(0, pos + 1);
+
+    char ruta2[512] = "";
+    strcpy(ruta2, res.c_str());
+    strcat(ruta2, nombree.c_str());
+    strcat(ruta2, "_rd.dsk");
+
+    bool pudo1 = true, pudo2 = true;
+    FILE *f;
+    if ((f = fopen(ruta, "r+b")) == NULL) {
+        pudo1 = false;
+    } else {
+        fseek(f, inicio, SEEK_SET);
+        fwrite(&aux, sizeof (bloqueApuntadores), 1, f);
+
+        fclose(f);
+    }
+    if ((f = fopen(ruta2, "r+b")) == NULL) {
+        pudo2 = false;
+    } else {
+        fseek(f, inicio, SEEK_SET);
+        fwrite(&aux, sizeof (bloqueApuntadores), 1, f);
+
+        fclose(f);
+    }
+
+    if(pudo1==false && pudo2==false){
+        cout<<"Error: no se pudo abrir el disco!"<<endl;
+    }
+
+}
+bloqueApuntadores blocksAp_leer(int inicio, int n, char ruta[512], bloqueApuntadores aux) {
+    string auxf = ruta;
+    size_t pos = 0;
+    string res = "";
+    while ((pos = auxf.find("/")) != string::npos) {
+        res += auxf.substr(0, pos) + "/";
+        auxf.erase(0, pos + 1);
+    }
+
+    string nombree = "";
+    pos = auxf.find(".");
+    nombree += auxf.substr(0, pos);
+    auxf.erase(0, pos + 1);
+
+    char ruta2[512] = "";
+    strcpy(ruta2, res.c_str());
+    strcat(ruta2, nombree.c_str());
+    strcat(ruta2, "_rd.dsk");
+
+    bool pudo1 = true, pudo2 = true;
+    FILE *f;
+    if ((f = fopen(ruta, "r+b")) == NULL) {
+        if ((f = fopen(ruta2, "r+b")) == NULL) {
+            cout<<"Error: no se pudo abrir el disco!"<<endl;
+        } else {
+            fseek(f, inicio, SEEK_SET);
+            fread(&aux, sizeof (bloqueApuntadores), 1, f);
+
+            fclose(f);
+        }
+    } else {
+        fseek(f, inicio, SEEK_SET);
+        fread(&aux, sizeof (bloqueApuntadores), 1, f);
+
+        fclose(f);
+    }
+    return aux;
 
 }
 

@@ -25,9 +25,12 @@ void inodos_escribir(int inicio, int n, char ruta[512], inodo aux[]);
 void inodos_leer(int inicio, int n, char ruta[512], inodo *aux);
 bloqueCarpeta  blocksC_leer(int inicio, int n, char ruta[512], bloqueCarpeta aux);
 void blocksC_escribir(int inicio, int n, char ruta[512], bloqueCarpeta aux);
-void blocksA_leer(int inicio, int n, char ruta[512], bloqueCarpeta aux);
-void blocksA_escribir(int inicio, int n, char ruta[512], bloqueCarpeta aux);
+bloqueArchivo blocksA_leer(int inicio, int n, char ruta[512], bloqueArchivo aux);
+void blocksA_escribir(int inicio, int n, char ruta[512], bloqueArchivo aux);
 inodo inodos_leer1(int inicio, int n, char ruta[512], inodo aux);
 inodo inodos_escribir1(int inicio, int n, char ruta[512], inodo aux);
+bloqueApuntadores blocksAp_leer(int inicio, int n, char ruta[512], bloqueApuntadores aux);
+void blocksAp_escribir(int inicio, int n, char ruta[512], bloqueApuntadores aux);
+void rBLOCK(char path[512], char nombre[16], char extension[6], char id[16]);
 
 #endif //MIA_PROYECTO1_202004765_CMKFS_H
