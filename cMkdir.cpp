@@ -7,7 +7,7 @@
 
 void fechActual(char fecha[128]);
 datosBusquedaCarpeta buscarCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512]);
-datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512],superBloque sb,mnt_nodo mountNodo, char id[16]);
+datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512], char id[16]);
 void actualizarBMI(int posIni, int posAct, char id[16]);
 
 void cMkdir(char path[512], char id[16], bool p){
@@ -40,7 +40,7 @@ void cMkdir(char path[512], char id[16], bool p){
             inodoActual = busqueda.inod; //Cambiamos de inodo actual para seguir buscando o crear la carpeta que interesa
         }else{
             if(p==true){
-                creada = crearCarpeta(carpe, inodoActual, p, n,mountNodo.mnt_ruta,sb,mountNodo, id);
+                creada = crearCarpeta(carpe, inodoActual, p, n,mountNodo.mnt_ruta, id);
                 if (creada.encontrada==true){
                     inodoActual = creada.inod;
                 }
@@ -51,20 +51,19 @@ void cMkdir(char path[512], char id[16], bool p){
         }
     }
 
-    if(busqueda.encontrada==true) {
+    if(busqueda.encontrada==true||(creada.encontrada==true&&p==true)) {
         //cout<<"Carpeta "<<auxf.substr(0, pos)<<endl; //Carpeta a crear
         strcpy(carpe, auxf.substr(0, pos).c_str());
-        crearCarpeta(carpe, inodoActual, p, n, mountNodo.mnt_ruta, sb, mountNodo, id);
+        crearCarpeta(carpe, inodoActual, p, n, mountNodo.mnt_ruta, id);
     }
 
 
-    verSB(sb);
     cout<<endl;
     cout<<endl;
 
     inodos_leer(sb.s_inode_start,n,mountNodo.mnt_ruta,ino);
 
-    cout<<"UID del usuario: "<<ino[0].i_uid<<endl;
+    /*cout<<"UID del usuario: "<<ino[0].i_uid<<endl;
     cout<<"GID del grupo: "<<ino[0].i_gid<<endl;
     cout<<"Tamaño del archivo: "<<ino[0].i_size<<endl;
     cout<<"Última fecha en que se leyó el inodo sin modificarlo: "<<ino[0].i_atime<<endl;
@@ -106,7 +105,7 @@ void cMkdir(char path[512], char id[16], bool p){
         }
 
     }
-    cout<<"Tipo: "<<ino[0].i_type<<endl;
+    cout<<"Tipo: "<<ino[0].i_type<<endl;*/
 
 }
 
@@ -132,23 +131,28 @@ datosBusquedaCarpeta buscarCarpeta(char carpeta[12], inodo inodoActual, bool p, 
     return res;
 }
 
-datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512],superBloque sb,mnt_nodo mountNodo, char id[16]){
+datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512], char id[16]){
     datosBusquedaCarpeta res;
     res.encontrada=false;
-    bool lleno = true;
+    bool lleno = true; //Bandera para identificar si esta llenos los bloques que ya existen
     for (int i = 0; i < sizeof(inodoActual.i_block); i++) { //Buscando inodoAcrual
+        superBloque sb = sb_retornar(id); //Obteniendo super bloque
+        mnt_nodo mountNodo = retornarNodoMount(id); //Obteniendo nodo de la partición montada
+
         if(inodoActual.i_block[i]!=-1){ //buscando el primer ocupado
             bloqueCarpeta bloque;
             bloque = blocksC_leer(inodoActual.i_block[i], n, ruta, bloque);
-            for (int j = 0; j < 4; ++j) {
+            for (int j = 0; j < 4; ++j) { //Recorriendo los cuatro espacios del bloque carpeta
                 if (bloque.b_content[j].b_inodo==-1){ //Buscando el primer espacio libre
                     strcpy(bloque.b_content[j].b_name,carpeta);
-                    //TODO actualizar existente, crear inodo y crear primer bloque
+
                     //ACTUALIZANDO BLOQUE EXISTENTE
                     strcpy(bloque.b_content[j].b_name,carpeta);
                     bloque.b_content[j].b_inodo=sb.s_first_ino;
+
                     blocksC_escribir(inodoActual.i_block[i],n,ruta,bloque);
                     //*****************************
+
                     //CREANDO NUEVO INODO
                     inodo ino;
                     times fech;
@@ -156,19 +160,22 @@ datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, i
                     ino.i_uid = 1;
                     ino.i_gid = 1;
                     ino.i_size = 0;
-                    strcpy(ino.i_atime,"");
+                    strcpy(ino.i_atime,fech);
                     strcpy(ino.i_ctime,fech);
                     strcpy(ino.i_mtime,fech);
-                    ino.i_block[0]=sb.s_first_blo;
-                    for (int j = 1; j < 15; ++j) {
+
+                    for (int j = 0; j < 15; ++j) {
                         ino.i_block[j]=-1;
                     }
+                    ino.i_block[0]=sb.s_first_blo; //AQUI ME QUEDE
                     ino.i_type='0';
                     inodos_escribir1(sb.s_first_ino, n, mountNodo.mnt_ruta, ino);
                     res.inod=inodos_leer1(sb.s_first_ino, n, mountNodo.mnt_ruta, ino);
+                    inodoActual=res.inod;
                     actualizarBMI(sb.s_inode_start, sb.s_first_ino, id);
                     //*****************************
-                    //CREANDO PRIMER BLOQUE PARA EL NUEVO INODO
+
+                    //CREANDO PRIMER BLOQUE PARA EL NUEVO bloque
                     bloqueCarpeta blocks;
                     strcpy(blocks.b_content[0].b_name,".");
                     blocks.b_content[0].b_inodo = sb.s_first_ino;
@@ -186,6 +193,7 @@ datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, i
                     sb.s_free_inodes_count--;
                     sb.s_first_ino=sb.s_first_ino+sizeof(inodo)+1;
                     sb.s_first_blo=sb.s_first_blo+sizeof(bloqueCarpeta)+1;
+
                     int inicio=0;
                     if (mountNodo.mnt_particion.part_fit == 'B' || mountNodo.mnt_particion.part_fit == 'F' || mountNodo.mnt_particion.part_fit == 'W') {//es primaria
                         inicio = mountNodo.mnt_particion.part_start;
@@ -194,24 +202,116 @@ datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, i
                     }
                     sb_escribir(mountNodo.mnt_ruta,inicio,sb);
                     //*************************
+
                     lleno=false;
                     res.encontrada = true;
                     cout<<"\t................ Creando carpeta ................"<<carpeta<<endl;
+
                     break;
                 }
             }
-        }else{
-            if(lleno==true){
-            }
         }
-        if(lleno==false){
+        if(lleno==false){ //Para salirse si encontró espacio
             break;
         }
     }
     if (lleno==true){
+        cout<<"estan llenos los otros"<<endl;
         for (int i = 0; i < sizeof(inodoActual.i_block); i++) { //Buscando inodo actual
-            if(inodoActual.i_block[i]==-1){ //buscando el primer libre
+            bloqueCarpeta bloque;
+            bloque = blocksC_leer(inodoActual.i_block[i], n, ruta, bloque);
+
+            superBloque sb = sb_retornar(id); //Obteniendo super bloque
+            mnt_nodo mountNodo = retornarNodoMount(id); //Obteniendo nodo de la partición montada
+            if(inodoActual.i_block[i]==-1) { //buscando el primer libre
+                cout<<"encontré un nodo libre en "<<i<<endl;
+
+                bloqueCarpeta blq;
+                blq = blocksC_leer(inodoActual.i_block[0], n, mountNodo.mnt_ruta, blq);
                 //TODO crear bloque crear inodo y primer bloque
+
+                //ACTUALIZANDO CONTENIDO DEL INODO ACTUAL
+                inodoActual.i_block[i] = sb.s_first_blo;
+                times fecha;
+                fechActual(fecha);
+
+                strcpy(inodoActual.i_mtime,fecha);
+                inodos_escribir1(blq.b_content[0].b_inodo, n, mountNodo.mnt_ruta, inodoActual);
+                //*******************************
+
+                //CREANDO NUEVO BLOQUE
+                bloqueCarpeta blocks;
+
+                strcpy(blocks.b_content[0].b_name,carpeta);
+                blocks.b_content[0].b_inodo = sb.s_first_ino;
+                strcpy(blocks.b_content[1].b_name,"");
+                blocks.b_content[1].b_inodo = -1;
+                strcpy(blocks.b_content[2].b_name,"");
+                blocks.b_content[2].b_inodo = -1;
+                strcpy(blocks.b_content[3].b_name,"");
+                blocks.b_content[3].b_inodo = -1;
+                blocksC_escribir(sb.s_first_blo, n, mountNodo.mnt_ruta, blocks);
+                //*****************************
+
+                //ACTUALIZANDO SUPERBLOQUE
+                sb.s_free_blocks_counts--;
+                sb.s_first_blo=sb.s_first_blo+sizeof(bloqueCarpeta)+1;
+
+                //CREANDO NUEVO INODO
+                inodo ino;
+                times fech;
+                fechActual(fech);
+                ino.i_uid = 1;
+                ino.i_gid = 1;
+                ino.i_size = 0;
+                strcpy(ino.i_atime,fech);
+                strcpy(ino.i_ctime,fech);
+                strcpy(ino.i_mtime,fech);
+
+                for (int j = 0; j < 15; ++j) {
+                    ino.i_block[j]=-1;
+                }
+                ino.i_block[0]=sb.s_first_blo; //AQUI ME QUEDE
+                ino.i_type='0';
+                inodos_escribir1(sb.s_first_ino, n, mountNodo.mnt_ruta, ino);
+                res.inod=inodos_leer1(sb.s_first_ino, n, mountNodo.mnt_ruta, ino);
+                inodoActual=res.inod;
+                actualizarBMI(sb.s_inode_start, sb.s_first_ino, id);
+                //*****************************
+
+                //CREANDO PRIMER BLOQUE PARA EL NUEVO INODO
+                bloqueCarpeta blocks2;
+                strcpy(blocks2.b_content[0].b_name,".");
+                blocks2.b_content[0].b_inodo = sb.s_first_ino;
+                strcpy(blocks2.b_content[1].b_name,"..");
+                blocks2.b_content[1].b_inodo = bloque.b_content[0].b_inodo;
+                strcpy(blocks2.b_content[2].b_name,"");
+                blocks2.b_content[2].b_inodo = -1;
+                strcpy(blocks2.b_content[3].b_name,"");
+                blocks2.b_content[3].b_inodo = -1;
+                blocksC_escribir(sb.s_first_blo, n, mountNodo.mnt_ruta, blocks2);
+                //*****************************
+
+                //ACTUALIZANDO SUPERBLOQUE
+                sb.s_free_blocks_counts--;
+                sb.s_free_inodes_count--;
+                sb.s_first_ino=sb.s_first_ino+sizeof(inodo)+1;
+                sb.s_first_blo=sb.s_first_blo+sizeof(bloqueCarpeta)+1;
+
+                int inicio=0;
+                if (mountNodo.mnt_particion.part_fit == 'B' || mountNodo.mnt_particion.part_fit == 'F' || mountNodo.mnt_particion.part_fit == 'W') {//es primaria
+                    inicio = mountNodo.mnt_particion.part_start;
+                } else {//del ebr
+                    inicio = mountNodo.mnt_ebr.part_start;
+                }
+                sb_escribir(mountNodo.mnt_ruta,inicio,sb);
+                //*************************
+
+                lleno=false;
+                res.encontrada = true;
+                cout<<"\t................ Creando carpeta ................"<<carpeta<<endl;
+
+                break;
             }
         }
     }

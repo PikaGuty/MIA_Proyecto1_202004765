@@ -910,7 +910,7 @@ void rINODE(char path[512], char nombre[16], char extension[6], char id[16]){
     for (int i = 0; i < 1024; ++i) {
         if (direccionesInodos[i]!=0){
             inodo ino;
-            ino = inodos_leer1(sb.s_inode_start, n, mountNodo.mnt_ruta, ino);
+            ino = inodos_leer1(direccionesInodos[i], n, mountNodo.mnt_ruta, ino);
             dot += "inodo";
             dot += to_string(direccionesInodos[i]);
             dot += "[label=<<TABLE border=\"3\" bgcolor=\"#60D394\">\n"
@@ -1009,7 +1009,7 @@ void rBLOCK(char path[512], char nombre[16], char extension[6], char id[16]){
     for (int i = 0; i < 1024; ++i) {
         if (direccionesInodos[i]!=0){
             inodo ino;
-            ino = inodos_leer1(sb.s_inode_start, n, mountNodo.mnt_ruta, ino);
+            ino = inodos_leer1(direccionesInodos[i], n, mountNodo.mnt_ruta, ino);
             if(ino.i_type=='0'){
                 for (int j = 0; j < 15; ++j) {
                     if(ino.i_block[j]!=-1){
@@ -1136,7 +1136,7 @@ void rBLOCK(char path[512], char nombre[16], char extension[6], char id[16]){
 }
 
 bool escribirDOT(string dot, char pathCe[512], char pathC[512], char extension[6]){
-    cout<<dot<<endl;
+    //cout<<dot<<endl;
     string ext = extension;
     transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 
@@ -1162,7 +1162,7 @@ bool escribirDOT(string dot, char pathCe[512], char pathC[512], char extension[6
     strcat(comando,pathCe);
     strcat(comando,"\'");
     system(comando);
-    cout<<comando<<endl;
+    //cout<<comando<<endl;
     cout<<"\t...................Se ha creado el reporte................"<<endl;
 
 }
