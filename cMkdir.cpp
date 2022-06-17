@@ -19,7 +19,6 @@ void cMkdir(char path[512], char id[16], bool p){
     size_t pos = 0;
     string res = "";
     auxf.erase(0, pos+1);
-
     int n = sb.s_inodes_count; //Total de inodos
     inodo ino[n];
     inodos_leer(sb.s_inode_start,n,mountNodo.mnt_ruta,ino); //Obteniendo la lista de inodos en el sistema
@@ -132,6 +131,7 @@ datosBusquedaCarpeta buscarCarpeta(char carpeta[12], inodo inodoActual, bool p, 
 }
 
 datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512], char id[16]){
+    cout<<"LLEGA ACA"<<endl;
     datosBusquedaCarpeta res;
     res.encontrada=false;
     bool lleno = true; //Bandera para identificar si esta llenos los bloques que ya existen
@@ -194,11 +194,12 @@ datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, i
                     sb.s_first_ino=sb.s_first_ino+sizeof(inodo)+1;
                     sb.s_first_blo=sb.s_first_blo+sizeof(bloqueCarpeta)+1;
 
+                    cout<<"LLEGA ACA"<<endl;
                     int inicio=0;
                     if (mountNodo.mnt_particion.part_fit == 'B' || mountNodo.mnt_particion.part_fit == 'F' || mountNodo.mnt_particion.part_fit == 'W') {//es primaria
                         inicio = mountNodo.mnt_particion.part_start;
                     } else {//del ebr
-                        inicio = mountNodo.mnt_ebr.part_start;
+                        inicio = mountNodo.mnt_ebr.part_start+sizeof (ebr);
                     }
                     sb_escribir(mountNodo.mnt_ruta,inicio,sb);
                     //*************************
@@ -302,7 +303,7 @@ datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, i
                 if (mountNodo.mnt_particion.part_fit == 'B' || mountNodo.mnt_particion.part_fit == 'F' || mountNodo.mnt_particion.part_fit == 'W') {//es primaria
                     inicio = mountNodo.mnt_particion.part_start;
                 } else {//del ebr
-                    inicio = mountNodo.mnt_ebr.part_start;
+                    inicio = mountNodo.mnt_ebr.part_start+sizeof (ebr);
                 }
                 sb_escribir(mountNodo.mnt_ruta,inicio,sb);
                 //*************************
@@ -360,6 +361,7 @@ void obtenerListaBMI(char id[16], int direccionesInodos[1024]) {
 
 void crearRoot(char id[16]) {
     //primero tengo que obtener el super bloque
+
     superBloque sb = sb_retornar(id);
     mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
     int n = sb.s_inodes_count; //Total de inodos
@@ -412,7 +414,7 @@ void crearRoot(char id[16]) {
     if (mountNodo.mnt_particion.part_fit == 'B' || mountNodo.mnt_particion.part_fit == 'F' || mountNodo.mnt_particion.part_fit == 'W') {//es primaria
         inicio = mountNodo.mnt_particion.part_start;
     } else {//del ebr
-        inicio = mountNodo.mnt_ebr.part_start;
+        inicio = mountNodo.mnt_ebr.part_start+sizeof (ebr);
     }
 
     sb_escribir(mountNodo.mnt_ruta,inicio,sb);

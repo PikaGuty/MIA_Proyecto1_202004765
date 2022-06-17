@@ -80,24 +80,16 @@ void cMkfs(int add, char id[16], char unitt[16], char type[16]){
                 crear_ext3(particion, n, part_inicio + pimerEspacioEBR); //creando los sectores, super bloque, inodos
 
                 actualizarStatus(path, nombre, '2');
-
                 crearRoot(id);
-
-                /*superBloque sb = sb_retornar(id); //Obteniendo super bloque
-                mnt_nodo mountNodo = retornarNodoMount(id); //Obteniendo nodo de la partición montada
-
-                bmBloque agrregloBmb[n * 3];
-                bmb_leer(sb.s_bm_block_start, n, mountNodo.mnt_ruta, agrregloBmb);
-                for (int u = 0; u < 3 * n; u++) {
-                    cout<<"s "<<agrregloBmb[u].status<<endl;
-                }*/
+                cout << "\t...................Se ha formateado la partición................" << endl;
             }
-            cout << "\t...................Se ha formateado la partición................" << endl;
+
     }
 }
 
 void crear_ext3(mnt_nodo mountNodo, int n, int inicioParticion) {
-
+    //cout<<"EL INICIO DE LA PARTICION"<<inicioParticion<<endl;
+    //cout<<"Tamaño del EBR "<< sizeof(ebr)<<endl;
     superBloque sb = sb_inicializar(n, mountNodo.tiempo, inicioParticion);
     //cout<<"Antes de escribir "<<sb.s_inodes_count<<endl;
     sb_escribir(mountNodo.mnt_ruta, inicioParticion, sb); //Escribiendo el super bloque
@@ -156,11 +148,10 @@ void crear_ext3(mnt_nodo mountNodo, int n, int inicioParticion) {
 
 superBloque sb_inicializar(int n, times tiempo, int inicio) {//inicializo las variables del superbloque
 
-    //cout<<"Inicio en = "<<inicio<<endl;
+    //cout<<"iniInicio en = "<<inicio<<endl;
     superBloque sb;
 
     sb.s_inodes_count = n;
-    //cout<<"LE voy a meter "<<n<<" inodos"<<endl;
     sb.s_blocks_count = 3 * n;
 
     sb.s_free_blocks_counts = 3 * n;
@@ -188,7 +179,6 @@ superBloque sb_inicializar(int n, times tiempo, int inicio) {//inicializo las va
     return sb;
 }
 void sb_escribir(char ruta[512], int inicio, superBloque sb) {
-    cout<<"Inicio de la particion "<<inicio<<endl;
     string auxf = ruta;
     size_t pos = 0;
     string res = "";
@@ -292,9 +282,7 @@ superBloque sb_retornar(char id[16]) {
         fread(&sb, sizeof (superBloque), 1, f);
         fclose(f);
     }
-
     return sb;
-
 }
 
 void jr_escribir(int inicio, int n, char ruta[512], journalie aux[]) {

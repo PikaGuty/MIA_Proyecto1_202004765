@@ -13,7 +13,9 @@
 #include "cRep.h"
 #include "cMkdir.h"
 #include "cMkfile.h"
+#include "cExec.h"
 
 void analizar();
+void analizarEX(string texto);
 
 #endif //MIA_PROYECTO1_202004765_ANALIZADOR_H

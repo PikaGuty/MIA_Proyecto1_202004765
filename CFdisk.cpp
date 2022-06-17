@@ -700,10 +700,10 @@ void cFdisk_eliminar(char path[512], char delet[16], char name[64]) {
 
                 particiones[i].part_size = 0;
                 particiones[i].part_start = 0;
-                particiones[i].part_fit = '\0';
+                particiones[i].part_fit = ' ';
                 strcpy(particiones[i].part_name, "");
                 particiones[i].part_status = '0';
-                particiones[i].part_type = '\0';
+                particiones[i].part_type = ' ';
 
             } else {
                 cout << "Tipo =full, size " << particiones[i].part_size << endl;
@@ -735,10 +735,10 @@ void cFdisk_eliminar(char path[512], char delet[16], char name[64]) {
 
                 particiones[i].part_size = 0;
                 particiones[i].part_start = 0;
-                particiones[i].part_fit = '\0';
+                particiones[i].part_fit = ' ';
                 strcpy(particiones[i].part_name, "");
                 particiones[i].part_status = '0';
-                particiones[i].part_type = '\0';
+                particiones[i].part_type = ' ';
 
             }
 

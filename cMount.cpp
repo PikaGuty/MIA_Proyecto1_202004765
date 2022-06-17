@@ -14,7 +14,7 @@
 
 using namespace std;
 
-
+bool retornarN(char nombre[16], char ruta[512]);
 void inicializarListaMount();
 void mntPush(mnt_lista* lista, partitiond particion, ebr logica, char ruta[512]);
 partitiond devolverParticion(char ruta[512], char nombre[16]);
@@ -42,19 +42,28 @@ void cMount(char ruta[512], char nombre[16]) {
     eb.part_size=0;
     eb.part_start=0;
 
-    cout<<"Montando "<<endl;
-
     if (part.part_fit == 'B' || part.part_fit == 'F' || part.part_fit == 'W') {//si no hay primaria, buscar en la secundaria
-        mntPush(listaDeParticiones,part, eb, ruta); //se ingresa la particion a la lista.
-        actualizarStatus(ruta, nombre, '1');
-        cout<<"\t...................Se ha montado la partición................"<<endl;
+        bool existe = retornarN(nombre,ruta);
+        if(existe==false) {
+            mntPush(listaDeParticiones, part, eb, ruta); //se ingresa la particion a la lista.
+            actualizarStatus(ruta, nombre, '1');
+            cout << "\t...................Se ha montado la partición................" << endl;
+        }else{
+            cout<<"Error: La partición "<<part.part_name<<" ya está montada "<<endl;
+        }
     } else {
         eb = devLogica(ruta,nombre);
         //eb = devolverLogica(ruta, nombre);
         if (eb.part_fit == 'B' || eb.part_fit == 'F' || eb.part_fit == 'W') {
-            mntPush(listaDeParticiones, part, eb, ruta);
-            actualizarStatus(ruta, nombre, '1');
-            cout << "\t...................Se ha montado la partición................" << endl;
+            bool existe = retornarN(nombre,ruta);
+            if(existe== false){
+                mntPush(listaDeParticiones, part, eb, ruta);
+                actualizarStatus(ruta, nombre, '1');
+                cout << "\t...................Se ha montado la partición................" << endl;
+            }else{
+                cout<<"Error: La partición "<<eb.part_name<<" ya está montada"<<endl;
+            }
+
         }else
             cout<<"Error: No se encontró la partición en el disco"<<endl;
     }
@@ -468,4 +477,27 @@ mnt_nodo retornarNodoMount(char ids[16]) {
     mnt_nodo re;
     strcpy(re.mnt_ruta, "");
     return re;
+}
+
+bool retornarN(char nombre[16], char ruta[512]) {
+    mnt_lista* lista = listaDeParticiones;
+    mnt_nodo* puntero = lista->cabeza;
+    int r1,r2;
+
+    while (puntero) {
+        cout<<ruta<<" "<< puntero->mnt_ruta<<endl;
+        r1 = strncmp(ruta, puntero->mnt_ruta, 512);
+        //cout<<nombre<<" "<<puntero->mnt_particion.part_name<<" "<<puntero->mnt_ebr.part_name<<endl;
+        if (puntero->mnt_particion.part_fit == 'B' || puntero->mnt_particion.part_fit == 'F' || puntero->mnt_particion.part_fit == 'W') {
+            r2 = strcmp(nombre, puntero->mnt_particion.part_name);
+        }else{
+            r2 = strcmp(nombre, puntero->mnt_ebr.part_name);
+        }
+        cout<<nombre<<" "<<puntero->mnt_particion.part_name<<" "<<puntero->mnt_ebr.part_name<<endl;
+        if ((r1 == 0&&r2 == 0))//lo encontró
+
+            return true;
+        puntero = puntero->siguiente;
+    }
+    return false;
 }

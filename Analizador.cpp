@@ -104,10 +104,106 @@ void analizar(){
             cout<<"************************ Ejecutando REP ************************"<<endl;
             token = strtok(NULL, " ");
             comando_REP(token);
+        }else {
+            cout << "Error: Este comando no existe" << endl;
         }
 
 
         token = strtok(NULL, " ");
+    }
+}
+
+void analizarEX(string texto){
+
+    //CONVERTIR A ARREGLO DE CHAR
+    char str[1024];
+    strcpy(str, texto.c_str());
+
+    string s1="/*",s2="*/";
+    if (texto.find(s1) != std::string::npos && texto.find(s2) != std::string::npos) {
+        cout<<texto<<endl;
+    }else {
+        if(texto!="") {
+            cout << "\n*** COMANDO: " << texto << " ***" << endl;
+        }
+        //SEPARANDO
+        char *token = strtok(str, " ");
+
+        while (token != NULL) {
+            string actual = "";
+            actual += token;
+            transform(actual.begin(), actual.end(), actual.begin(), ::tolower);
+
+            if (actual == "mkdisk") {
+                cout << "************************ Ejecutando MKDISK ************************" << endl;
+                token = strtok(NULL, " ");
+                comando_MKDISK(token);
+            } else if (actual == "rmdisk") {
+                cout << "************************ Ejecutando RMDISK ************************" << endl;
+                token = strtok(NULL, " ");
+                comando_RMDISK(token);
+            } else if (actual == "fdisk") {
+                cout << "************************ Ejecutando FDISK ************************" << endl;
+                token = strtok(NULL, " ");
+                comando_FDISK(token);
+            } else if (actual == "mount") {
+                cout << "************************ Ejecutando MOUNT ************************" << endl;
+                token = strtok(NULL, " ");
+                comando_MOUNT(token);
+            } else if (actual == "unmount") {
+                cout << "************************ Ejecutando UNMOUNT ************************" << endl;
+                token = strtok(NULL, " ");
+                comando_UNMOUNT(token);
+            } else if (actual == "mkfs") {
+                cout << "************************ Ejecutando MKFS ************************" << endl;
+                token = strtok(NULL, " ");
+                comando_MKFS(token);
+            } else if (actual == "mkfile") {
+                cout << "************************ Ejecutando MKFILE ************************" << endl;
+                token = strtok(NULL, " ");
+                comando_MKFILE(token);
+            } else if (actual == "exec") {
+                cout << "************************ Ejecutando EXEC ************************" << endl;
+                token = strtok(NULL, " ");
+                comando_EXEC(token);
+            } else if (actual == "rm") {
+                cout << "************************ Ejecutando RM ************************" << endl;
+                token = strtok(NULL, " ");
+                comando_RM(token);
+            } else if (actual == "mkdir") {
+                cout << "************************ Ejecutando MKDIR ************************" << endl;
+                token = strtok(NULL, " ");
+                comando_MKDIR(token);
+            } else if (actual == "cp") { // TODO preguntar que tabla usar
+                cout << "************************ Ejecutando CP ************************" << endl;
+                token = strtok(NULL, " ");
+                comando_CP(token);
+            }/*else if (actual=="ls"){ TODO preguntar que tabla usar
+            cout<<"************************ Ejecutando LS ************************"<<endl;
+            token = strtok(NULL, " ");
+            comando_LS(token);
+        }*/else if (actual == "pause") {
+                cout << "************************ Ejecutando PAUSE ************************" << endl;
+                token = strtok(NULL, " ");
+                comando_PAUSE(token);
+            } else if (actual == "loss") {
+                cout << "************************ Ejecutando LOSS ************************" << endl;
+                token = strtok(NULL, " ");
+                comando_LOSS(token);
+            } else if (actual == "rep") {
+                cout << "************************ Ejecutando REP ************************" << endl;
+                token = strtok(NULL, " ");
+                comando_REP(token);
+            } else {
+                cout << "Error: Este comando no existe" << endl;
+            }
+
+
+            token = strtok(NULL, " ");
+        }
+    }
+    if(texto!="") {
+        cout << "\n" << endl;
     }
 }
 
@@ -978,9 +1074,8 @@ void comando_EXEC(char *token){
 
     if(xpath==true){//Se puede ejecutar el comando
         //LLAMAR AL METODO PARA TERMINAR VERIFICACIONES Y REALIZAR LO QUE TIENE QUE HACER
-
         cout<<"Path: "<<path<<endl;
-       //TODO EXEC
+        execScript(path);
     }else{ //Notificando errores si no se ingresaron los parametros obligatorios al comando
         cout<<"Error: El comando \"EXEC\" debe poseer el parámetro ";
 
@@ -1316,12 +1411,12 @@ void comando_CP(char *token){
 }
 
 void comando_PAUSE(char *token){
-    bool xid = false;
     char id[64];
 
     if(token == NULL){
-        //TODO PAUSE
-        cout<<"PAUSEEEEEE"<<endl;
+        char c;
+        cout<<"Presione para continuar"<<endl;
+        cin>>c;
     }else{
         cout<<"Error: El comando \"PAUSE\" no debe llevar el parámetros."<<endl;
     }
