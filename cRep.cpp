@@ -686,14 +686,14 @@ void rSB(char path[512], char nombre[16], char extension[6], char id[16]){
            "    <TR>\n"
            "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Número de bloques libres</TD>\n"
            "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
-    dot += to_string(sb.s_free_inodes_count);
+    dot += to_string(sb.s_free_blocks_counts);
     dot += "</TD>\n"
            "    </TR>\n"
            "    \n"
            "    <TR>\n"
            "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">Número de inodos libres</TD>\n"
            "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
-    dot += to_string(sb.s_free_blocks_counts);
+    dot += to_string(sb.s_free_inodes_count);
     dot += "</TD>\n"
            "    </TR>\n"
            "    \n"
@@ -850,7 +850,7 @@ void rBMB(char path[512], char nombre[16], char extension[6], char id[16]){
     superBloque sb = sb_retornar(id);
     mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
 
-    int n = sb.s_inodes_count; //Total de inodos
+    int n = sb.s_blocks_count; //Total de inodos
     bmBloque bm_bloque[n];
     bmb_leer(sb.s_bm_inode_start, n, mountNodo.mnt_ruta, bm_bloque);
 
