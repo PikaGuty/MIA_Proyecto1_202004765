@@ -14,6 +14,7 @@ void rSB(char path[512], char nombre[16], char extension[6], char id[16]);
 void rBMI(char path[512], char nombre[16], char extension[6], char id[16]);
 void rBMB(char path[512], char nombre[16], char extension[6], char id[16]);
 void rINODE(char path[512], char nombre[16], char extension[6], char id[16]);
+void rTREE(char path[512], char nombre[16], char extension[6], char id[16]);
 
 void reportes(char path[512], char namee[64], char id[64]){
     string nam = namee;
@@ -63,7 +64,7 @@ void reportes(char path[512], char namee[64], char id[64]){
     }else if(nam=="journaling"){
         //TODO reporte journaling
     }else if(nam=="tree"){
-        //TODO reporte tree
+        rTREE(ruta, nombre, extension, id);
     }else if(nam=="sb"){
         rSB(ruta, nombre, extension, id);
     }else if(nam=="file"){
@@ -1126,6 +1127,417 @@ void rBLOCK(char path[512], char nombre[16], char extension[6], char id[16]){
 
     dot += "}";
 
+    char rutaCe[512],rutaC[512];
+    strcpy(rutaCe,path);
+    strcat(rutaCe,nombre);
+    strcat(rutaCe,".");
+    strcpy(rutaC,rutaCe);
+    strcat(rutaCe,extension);
+    escribirDOT(dot,rutaCe,rutaC,extension);
+}
+
+string generarInodos(char id[16]){
+    superBloque sb = sb_retornar(id);
+    mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
+
+    int n = sb.s_inodes_count; //Total de inodos
+    int direccionesInodos[1024];
+    obtenerListaBMI(id, direccionesInodos);
+
+    string  dot = "";
+    for (int i = 0; i < 1024; ++i) {
+        if (direccionesInodos[i]!=0){
+            inodo ino;
+            ino = inodos_leer1(direccionesInodos[i], n, mountNodo.mnt_ruta, ino);
+            dot += "\ninodo";
+            dot += to_string(direccionesInodos[i]);
+            dot += "[label=<<TABLE border=\"3\" bgcolor=\"#60D394\">\n"
+                   "    \n"
+                   "    <TR><TD border=\"2\"  bgcolor=\"#EE6055\" gradientangle=\"315\" colspan=\"2\" >inodo ";
+            dot += to_string(direccionesInodos[i]);
+            dot += "</TD></TR>\n"
+                   "      \n"
+                   "    <TR>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">UID</TD>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+            dot += to_string(ino.i_uid);
+            dot += "</TD>\n"
+                   "    </TR>\n"
+                   "    \n"
+                   "    <TR>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">GID</TD>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+            dot += to_string(ino.i_gid);
+            dot += "</TD>\n"
+                   "    </TR>\n"
+                   "    \n"
+                   "    <TR>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Size</TD>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+            dot += to_string(ino.i_size);
+            dot += "</TD>\n"
+                   "    </TR>\n"
+                   "    \n"
+                   "    <TR>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">atime</TD>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+            dot += ino.i_atime;
+            dot += "</TD>\n"
+                   "    </TR>\n"
+                   "    \n"
+                   "    <TR>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">ctime</TD>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+            dot += ino.i_ctime;
+            dot += "</TD>\n"
+                   "    </TR>\n"
+                   "    \n"
+                   "    <TR>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">mtime</TD>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+            dot += ino.i_mtime;
+            dot += "</TD>\n"
+                   "    </TR>\n"
+                   "    \n";
+
+            for (int j = 0; j < 15; ++j) {
+                dot += "    <TR>\n"
+                       "    <TD border=\"1\"  bgcolor=\"#CC5A71\"   gradientangle=\"315\">block_";
+                dot+= to_string((j+1));
+                dot+="</TD>\n";
+
+                if(ino.i_block[j]!=-1){
+                    dot+="    <TD border=\"1\"  bgcolor=\"#F0D7B6\" PORT=\"i";
+                    dot+= to_string(ino.i_block[j]);
+                    dot+="\" gradientangle=\"315\">";
+                    dot += to_string(ino.i_block[j]);
+                    dot += "</TD>\n";
+                }else{
+                    dot+="    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+                    dot += to_string(ino.i_block[j]);
+                    dot += "</TD>\n";
+                }
+
+
+                dot +="    </TR>\n\n";
+            }
+
+            dot += "    <TR>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">type</TD>\n"
+                   "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+            dot += ino.i_type;
+            dot += "</TD>\n"
+                   "    </TR>\n"
+                   "\n"
+                   "    </TABLE>>]\n\n";
+        }
+    }
+
+    return dot;
+}
+
+string generarBloques(char id[16]){
+    superBloque sb = sb_retornar(id);
+    mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
+
+    int n = sb.s_inodes_count; //Total de inodos
+    int direccionesInodos[1024];
+    obtenerListaBMI(id, direccionesInodos);
+
+    string  dot = "";
+    for (int i = 0; i < 1024; ++i) {
+        if (direccionesInodos[i]!=0){
+            inodo ino;
+            ino = inodos_leer1(direccionesInodos[i], n, mountNodo.mnt_ruta, ino);
+            if(ino.i_type=='0'){
+                for (int j = 0; j < 15; ++j) {
+                    if(ino.i_block[j]!=-1){
+                        if(j<12){
+                            bloqueCarpeta carp;
+                            carp = blocksC_leer(ino.i_block[j],n,mountNodo.mnt_ruta,carp);
+
+                            dot+="\ncarpet";
+                            dot+= to_string(ino.i_block[j]);
+                            dot+="[label=<<TABLE border=\"3\" bgcolor=\"#60D394\">\n"
+                                 "\n"
+                                 "<tr><td border=\"2\" bgcolor=\"#EE6055\" colspan=\"2\">Bloque Carpetas ";
+                            dot+= to_string(ino.i_block[j]);
+                            dot += "</td></tr>\n"
+                                   "\n"
+                                   "<tr>\n"
+                                   "<td border=\"1\" bgcolor=\"#127ABB\">Name</td>\n"
+                                   "<td border=\"1\" bgcolor=\"#127ABB\">Inodo</td>\n"
+                                   "</tr>\n"
+                                   "\n";
+                            for (int k = 0; k < 4; ++k) {
+                                dot+="<tr>\n"
+                                     "<td border=\"1\" bgcolor=\"#F0D7B6\" >";
+                                dot+= carp.b_content[k].b_name;
+                                dot+="</td>\n";
+                                if(carp.b_content[k].b_inodo!=-1){
+                                    dot+="<td border=\"1\" bgcolor=\"#F0D7B6\" PORT=\"b";
+                                    dot+= to_string(carp.b_content[k].b_inodo);
+                                    dot+= "\" >";
+                                    dot+= to_string(carp.b_content[k].b_inodo);
+                                    dot+="</td>\n";
+                                }else{
+                                    dot+="<td border=\"1\" bgcolor=\"#F0D7B6\" >";
+                                    dot+= to_string(carp.b_content[k].b_inodo);
+                                    dot+="</td>\n";
+                                }
+
+                                dot+="</tr>\n\n";
+                            }
+
+
+                            dot+="</TABLE>>]";
+                        }else{
+                            bloqueApuntadores apu;
+                            apu = blocksAp_leer(ino.i_block[j],n,mountNodo.mnt_ruta,apu);
+                            dot += "pointer";
+                            dot+=to_string(ino.i_block[j]);
+                            dot += "[label=<<TABLE border=\"3\" bgcolor=\"#60D394\">\n"
+                                   "\n"
+                                   "<tr>\n"
+                                   "<td border=\"2\" bgcolor=\"#E74C3C\" color=\"white \" colspan=\"2\">Bloque Apuntadores ";
+                            dot += to_string(ino.i_block[j]);
+                            dot += "</td>\n"
+                                   "</tr>\n"
+                                   "\n";
+                            for (int k = 0; k < 16; ++k) {
+                                dot += "<tr>\n"
+                                       "<td border=\"1\" bgcolor=\"#127ABB\">Pointer_";
+                                dot += to_string(k+1);
+                                dot += "</td>\n";
+
+                                if(apu.b_pointers[k]!=-1){
+                                    dot += "<td border=\"1\" bgcolor=\"#F0D7B6\" PORT=\"";
+                                    dot += to_string(apu.b_pointers[k]);
+                                    dot += "\" >";
+                                    dot += to_string(apu.b_pointers[k]);
+                                    dot += "</td>\n";
+                                }else{
+                                    dot += "<td border=\"1\" bgcolor=\"#F0D7B6\">";
+                                    dot += to_string(apu.b_pointers[k]);
+                                    dot += "</td>\n";
+                                }
+
+
+                                dot += "</tr>\n\n"
+                                       "</TABLE>>]";
+                            }
+                        }
+                    }
+                }
+            }else{
+                for (int j = 0; j < 15; ++j) {
+                    if(ino.i_block[j]!=-1) {
+                        if (j < 12) {
+                            bloqueArchivo arch;
+                            arch = blocksA_leer(ino.i_block[j], n, mountNodo.mnt_ruta, arch);
+                            dot += "archivo";
+                            dot += to_string(ino.i_block[j]);
+                            dot += "label=<<TABLE border=\"3\" bgcolor=\"#60D394\">\n"
+                                   "\n"
+                                   "<tr><td border=\"2\" bgcolor=\"#EE6055\" >Bloque Archivos ";
+                            dot += to_string(ino.i_block[j]);
+                            dot += "</td></tr>\n"
+                                   "\n"
+                                   "<tr>\n"
+                                   "<td border=\"1\" bgcolor=\"#F0D7B6\" >";
+                            dot += arch.b_content;
+                            dot += "</td>\n"
+                                   "</tr>\n"
+                                   "\n"
+                                   "</TABLE>>]";
+                        } else{
+                            bloqueApuntadores apu;
+                            apu = blocksAp_leer(ino.i_block[j],n,mountNodo.mnt_ruta,apu);
+                            dot += "pointer";
+                            dot+=to_string(ino.i_block[j]);
+                            dot += "[label=<<TABLE border=\"3\" bgcolor=\"#60D394\">\n"
+                                   "\n"
+                                   "<tr>\n"
+                                   "<td border=\"2\" bgcolor=\"#E74C3C\" color=\"white \" colspan=\"2\">Bloque Apuntadores ";
+                            dot += to_string(ino.i_block[j]);
+                            dot += "</td>\n"
+                                   "</tr>\n"
+                                   "\n";
+                            for (int k = 0; k < 16; ++k) {
+                                dot += "<tr>\n"
+                                       "<td border=\"1\" bgcolor=\"#127ABB\">Pointer_";
+                                dot += to_string(k+1);
+                                dot += "</td>\n";
+
+                                if(apu.b_pointers[k]!=-1){
+                                    dot += "<td border=\"1\" bgcolor=\"#F0D7B6\" PORT=\"";
+                                    dot += to_string(apu.b_pointers[k]);
+                                    dot += "\" >";
+                                    dot += to_string(apu.b_pointers[k]);
+                                    dot += "</td>\n";
+                                }else{
+                                    dot += "<td border=\"1\" bgcolor=\"#F0D7B6\">";
+                                    dot += to_string(apu.b_pointers[k]);
+                                    dot += "</td>\n";
+                                }
+
+
+                                dot += "</tr>\n\n"
+                                       "</TABLE>>]";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return dot;
+}
+
+string generarFlechas(char id[16]){
+    superBloque sb = sb_retornar(id);
+    mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
+
+    int n = sb.s_inodes_count; //Total de inodos
+    int direccionesInodos[1024];
+    obtenerListaBMI(id, direccionesInodos);
+
+    string  dot = "";
+    for (int i = 0; i < 1024; ++i) {
+        if (direccionesInodos[i]!=0){
+            inodo ino;
+            ino = inodos_leer1(direccionesInodos[i], n, mountNodo.mnt_ruta, ino);
+            dot +="\n";
+            for (int j = 0; j < 15; ++j) {
+                if(j<12){
+                    if (ino.i_type=='0'){
+                        if(ino.i_block[j]!=-1){
+                            dot +="inodo";
+                            dot += to_string(direccionesInodos[i]);
+                            dot +=":";
+                            dot +="i";
+                            dot += to_string(ino.i_block[j]);
+                            dot +=" -> carpet";
+                            dot += to_string(ino.i_block[j]);
+                            dot +=";\n";
+                        }
+                    }else{
+                        if(ino.i_block[j]!=-1){
+                            dot +="inodo";
+                            dot += to_string(direccionesInodos[i]);
+                            dot +=":";
+                            dot +="i";
+                            dot += to_string(ino.i_block[j]);
+                            dot +=" -> archivo";
+                            dot += to_string(ino.i_block[j]);
+                            dot +=";\n";
+                        }
+                    }
+                }else{
+                    if(ino.i_block[j]!=-1){
+                        dot +="inodo";
+                        dot += to_string(direccionesInodos[i]);
+                        dot +=":";
+                        dot +="i";
+                        dot += to_string(ino.i_block[j]);
+                        dot +=" -> pointer";
+                        dot += to_string(ino.i_block[j]);
+                        dot +=";\n";
+                    }
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < 1024; ++i) {
+        if (direccionesInodos[i]!=0){
+            inodo ino;
+            ino = inodos_leer1(direccionesInodos[i], n, mountNodo.mnt_ruta, ino);
+            if(ino.i_type=='0'){
+                for (int j = 0; j < 15; ++j) {
+                    if(ino.i_block[j]!=-1){
+                        if(j<12){
+                            bloqueCarpeta carp;
+                            carp = blocksC_leer(ino.i_block[j],n,mountNodo.mnt_ruta,carp);
+
+                            for (int k = 0; k < 4; ++k) {
+                                if(carp.b_content[k].b_inodo!=-1) {
+                                    if (strcmp(carp.b_content[k].b_name,".") != 0&&strcmp(carp.b_content[k].b_name,"..") != 0&&strcmp(carp.b_content[k].b_name,"") != 0){
+                                        dot += "carpet";
+                                        dot += to_string(ino.i_block[j]);
+                                        dot += ":c";
+                                        dot += to_string(carp.b_content[k].b_inodo);
+                                        dot += " -> inodo";
+                                        dot += to_string(carp.b_content[k].b_inodo);
+                                        dot += ";\n";
+                                    }
+                                }
+                            }
+                        }else{
+                            bloqueApuntadores apu;
+                            apu = blocksAp_leer(ino.i_block[j],n,mountNodo.mnt_ruta,apu);
+
+                            for (int k = 0; k < 16; ++k) {
+                                if(apu.b_pointers[k]!=-1){
+                                    dot += "pointer";
+                                    dot += to_string(ino.i_block[j]);
+                                    dot += ":p";
+                                    dot += to_string(apu.b_pointers[k]);
+                                    dot += " -> inodo";
+                                    dot += to_string(apu.b_pointers[k]);
+                                    dot += ";\n";
+                                }
+                            }
+                        }
+                    }
+                }
+            }else{
+                for (int j = 0; j < 15; ++j) {
+                    if(ino.i_block[j]!=-1) {
+                        if (j > 12) {
+                            bloqueApuntadores apu;
+                            apu = blocksAp_leer(ino.i_block[j],n,mountNodo.mnt_ruta,apu);
+
+                            for (int k = 0; k < 16; ++k) {
+                                if(apu.b_pointers[k]!=-1){
+                                    dot += "pointer";
+                                    dot += to_string(ino.i_block[j]);
+                                    dot += ":p";
+                                    dot += to_string(apu.b_pointers[k]);
+                                    dot += " -> inodo";
+                                    dot += to_string(apu.b_pointers[k]);
+                                    dot += ";\n";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return dot;
+}
+
+void rTREE(char path[512], char nombre[16], char extension[6], char id[16]){
+    superBloque sb = sb_retornar(id);
+    mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
+
+    int n = sb.s_inodes_count; //Total de inodos
+    int direccionesInodos[1024];
+    obtenerListaBMI(id, direccionesInodos);
+
+    string  dot = "digraph G { \n"
+                  "    rankdir=LR;\n"
+                  "    node[shape=none]\n\n";
+
+    dot += generarInodos(id);
+    dot += generarBloques(id);
+    dot += generarFlechas(id);
+
+    dot += "}";
+
+    cout<<dot<<endl;
     char rutaCe[512],rutaC[512];
     strcpy(rutaCe,path);
     strcat(rutaCe,nombre);
