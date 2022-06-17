@@ -37,7 +37,7 @@ void cFdisk_crear(int size, char unit[16], char path[512], char type[16], char f
         }
 
     }
-    fdVER(path);
+    //fdVER(path);
 }
 
 datos_crearFDISK valFdisk_crear(int size, char unit[16], char path[512], char type[16], char fit[16], char name[16],datos_crearFDISK datos) {
@@ -811,7 +811,7 @@ void cFdisk_eliminar(char path[512], char delet[16], char name[64]) {
     }else{
         cout << "Error: no se encontró la partición: "<<name<<endl;
     }
-    fdVER(path);
+    //fdVER(path);
 }
 
 void actLogica(char path[512], char name[16], ebr logica){
@@ -1361,7 +1361,7 @@ void cFdisk_add(char unit[16], char path[512], char name[64], int add) {
         cout << "Error: no se encontró la partición: "<<name<<endl;
     }
 
-    fdVER(path);
+    //fdVER(path);
 }
 
 void cFdisk_mover(char path[512], char name[64], char mov[64]){

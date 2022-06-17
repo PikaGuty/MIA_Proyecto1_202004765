@@ -131,7 +131,7 @@ datosBusquedaCarpeta buscarCarpeta(char carpeta[12], inodo inodoActual, bool p, 
 }
 
 datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512], char id[16]){
-    cout<<"LLEGA ACA"<<endl;
+
     datosBusquedaCarpeta res;
     res.encontrada=false;
     bool lleno = true; //Bandera para identificar si esta llenos los bloques que ya existen
@@ -194,7 +194,6 @@ datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, i
                     sb.s_first_ino=sb.s_first_ino+sizeof(inodo)+1;
                     sb.s_first_blo=sb.s_first_blo+sizeof(bloqueCarpeta)+1;
 
-                    cout<<"LLEGA ACA"<<endl;
                     int inicio=0;
                     if (mountNodo.mnt_particion.part_fit == 'B' || mountNodo.mnt_particion.part_fit == 'F' || mountNodo.mnt_particion.part_fit == 'W') {//es primaria
                         inicio = mountNodo.mnt_particion.part_start;
@@ -217,7 +216,7 @@ datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, i
         }
     }
     if (lleno==true){
-        cout<<"estan llenos los otros"<<endl;
+        //cout<<"estan llenos los otros"<<endl;
         for (int i = 0; i < sizeof(inodoActual.i_block); i++) { //Buscando inodo actual
             bloqueCarpeta bloque;
             bloque = blocksC_leer(inodoActual.i_block[i], n, ruta, bloque);
@@ -225,7 +224,7 @@ datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, i
             superBloque sb = sb_retornar(id); //Obteniendo super bloque
             mnt_nodo mountNodo = retornarNodoMount(id); //Obteniendo nodo de la partición montada
             if(inodoActual.i_block[i]==-1) { //buscando el primer libre
-                cout<<"encontré un nodo libre en "<<i<<endl;
+                //cout<<"encontré un nodo libre en "<<i<<endl;
 
                 bloqueCarpeta blq;
                 blq = blocksC_leer(inodoActual.i_block[0], n, mountNodo.mnt_ruta, blq);

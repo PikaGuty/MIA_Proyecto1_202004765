@@ -387,14 +387,16 @@ void actualizarStatus(char path[512], char name[16], char status){
         }else{
             fseek(f, logic.part_start, SEEK_SET);
             fwrite(&logic, sizeof (logic), 1, f);
+            fclose(f);
         }
         if ((f = fopen(ruta2, "r+b")) == NULL) {
 
         }else{
             fseek(f, logic.part_start, SEEK_SET);
             fwrite(&logic, sizeof (logic), 1, f);
+            fclose(f);
         }
-        fclose(f);
+
     }else{
         cout << "Error: no se encontró la partición: "<<name<<endl;
     }

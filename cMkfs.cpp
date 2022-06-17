@@ -106,7 +106,7 @@ void crear_ext3(mnt_nodo mountNodo, int n, int inicioParticion) {
         agrregloBmb[u] = bmb;
     }
     agrregloBmb[0].status='1';
-    bmb_escribir(sb.s_bm_block_start, n, mountNodo.mnt_ruta, agrregloBmb);
+    bmb_escribir(sb.s_bm_block_start, n*3, mountNodo.mnt_ruta, agrregloBmb);
 
     //Bit map de inodos
     bmInodo bmi[n];
@@ -161,7 +161,8 @@ superBloque sb_inicializar(int n, times tiempo, int inicio) {//inicializo las va
     strcpy(sb.s_unmtime, tiempo);
 
     sb.s_mnt_count = 1;
-    sb.s_magic = -1;
+    int v2 = rand() % 666 + 1;
+    sb.s_magic = v2;
 
     sb.s_inode_size = sizeof (inodo);
     sb.s_block_size = sizeof (bloqueArchivo);
@@ -169,12 +170,11 @@ superBloque sb_inicializar(int n, times tiempo, int inicio) {//inicializo las va
     sb.s_first_ino = inicio + sizeof (superBloque) + n * sizeof (journalie) + 3 * n + n; //esta es la primer posicion y ya se agrego el +1 //primer inodo libre
     sb.s_first_blo = sb.s_first_ino + n * sizeof (inodo); //primer bloque libre
 
-    sb.s_bm_inode_start = inicio + sizeof (superBloque) + n * sizeof (journalie);
-    sb.s_bm_block_start = sb.s_bm_inode_start + n;
+    sb.s_bm_inode_start = inicio + sizeof (superBloque) + n * sizeof (journalie)+1;
+    sb.s_bm_block_start = sb.s_bm_inode_start + n+1;
 
     sb.s_inode_start = inicio + sizeof (superBloque) + n * sizeof (journalie) + 3 * n + n;
     sb.s_block_start = sb.s_inode_start + n * sizeof (inodo);
-    //sb.s_bjpurfree = inicio + sizeof (superBloque);
 
     return sb;
 }
@@ -366,7 +366,7 @@ void bmb_escribir(int inicio, int n, char ruta[512], bmBloque aux[]) {
         pudo1=false;
     } else {
         int j;
-        for (j = 0; j < n * 3; j++) {
+        for (j = 0; j < n; j++) {
             fseek(f, inicio + j * (sizeof (bmBloque)), SEEK_SET);
             fwrite(&aux[j], sizeof (bmBloque), 1, f);
         }
@@ -376,7 +376,7 @@ void bmb_escribir(int inicio, int n, char ruta[512], bmBloque aux[]) {
         pudo2=false;
     } else {
         int j;
-        for (j = 0; j < n * 3; j++) {
+        for (j = 0; j < n; j++) {
             fseek(f, inicio + j * (sizeof (bmBloque)), SEEK_SET);
             fwrite(&aux[j], sizeof (bmBloque), 1, f);
         }
@@ -412,7 +412,7 @@ void bmb_leer(int inicio, int n, char ruta[512], bmBloque *aux) {
             cout<<"Error: no se pudo abrir el disco!"<<endl;
         } else {
             int j;
-            for (j = 0; j < n * 3; j++) {
+            for (j = 0; j < n ; j++) {
                 fseek(f, inicio + j * (sizeof (bmBloque)), SEEK_SET);
                 fread(&aux[j], sizeof (bmBloque), 1, f);
             }
@@ -420,7 +420,7 @@ void bmb_leer(int inicio, int n, char ruta[512], bmBloque *aux) {
         }
     } else {
         int j;
-        for (j = 0; j < n * 3; j++) {
+        for (j = 0; j < n; j++) {
             fseek(f, inicio + j * (sizeof (bmBloque)), SEEK_SET);
             fread(&aux[j], sizeof (bmBloque), 1, f);
         }

@@ -645,7 +645,7 @@ void rDISK(char path[512], char nombre[16], char extension[6], char id[16]){
     dot+="\"];\n"
          "\n"
          "}";
-    cout<<dot<<endl;
+    //cout<<dot<<endl;
 
     char rutaCe[512],rutaC[512];
     strcpy(rutaCe,path);
@@ -851,6 +851,7 @@ void rBMB(char path[512], char nombre[16], char extension[6], char id[16]){
     mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
 
     int n = sb.s_blocks_count; //Total de inodos
+
     bmBloque bm_bloque[n];
     bmb_leer(sb.s_bm_inode_start, n, mountNodo.mnt_ruta, bm_bloque);
 
@@ -862,19 +863,29 @@ void rBMB(char path[512], char nombre[16], char extension[6], char id[16]){
                "    <TR><TD border=\"2\"  bgcolor=\"#EE6055\" gradientangle=\"315\" colspan=\"15\" >Bitmap de Bloques</TD></TR>\n"
                "    \n";
 
+
     for (int i = 0; i < n ; i++) {
         if((i%15)==0){
             dot+="<TR>\n";
         }
+
         if((i%2)==0){
             dot+="<TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">";
-            dot+=bm_bloque[i].status;
+            if(bm_bloque[i].status=='0'||bm_bloque[i].status=='1'){
+                dot+=bm_bloque[i].status;
+            }else{
+                dot+='0';
+            }
             dot+="B";
             dot+= to_string((1+i));
             dot+="</TD>\n";
         }else{
             dot+="<TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
-            dot+=bm_bloque[i].status;
+            if(bm_bloque[i].status=='0'||bm_bloque[i].status=='1'){
+                dot+=bm_bloque[i].status;
+            }else{
+                dot+='0';
+            }
             dot+="B";
             dot+= to_string((1+i));
             dot+="</TD>\n";
@@ -883,6 +894,7 @@ void rBMB(char path[512], char nombre[16], char extension[6], char id[16]){
             dot+="</TR>\n\n";
         }
     }
+
     dot+="</TR>\n\n";
     dot+="\n"
          "    </TABLE>>\n"
@@ -1537,7 +1549,6 @@ void rTREE(char path[512], char nombre[16], char extension[6], char id[16]){
 
     dot += "}";
 
-    cout<<dot<<endl;
     char rutaCe[512],rutaC[512];
     strcpy(rutaCe,path);
     strcat(rutaCe,nombre);
