@@ -1092,7 +1092,7 @@ void rBLOCK(char path[512], char nombre[16], char extension[6], char id[16]){
                             arch = blocksA_leer(ino.i_block[j], n, mountNodo.mnt_ruta, arch);
                             dot += "archivo";
                             dot += to_string(ino.i_block[j]);
-                            dot += "label=<<TABLE border=\"3\" bgcolor=\"#60D394\">\n"
+                            dot += "[label=<<TABLE border=\"3\" bgcolor=\"#60D394\">\n"
                                    "\n"
                                    "<tr><td border=\"2\" bgcolor=\"#EE6055\" >Bloque Archivos ";
                             dot += to_string(ino.i_block[j]);
@@ -1349,7 +1349,7 @@ string generarBloques(char id[16]){
                             arch = blocksA_leer(ino.i_block[j], n, mountNodo.mnt_ruta, arch);
                             dot += "archivo";
                             dot += to_string(ino.i_block[j]);
-                            dot += "label=<<TABLE border=\"3\" bgcolor=\"#60D394\">\n"
+                            dot += "[label=<<TABLE border=\"3\" bgcolor=\"#60D394\">\n"
                                    "\n"
                                    "<tr><td border=\"2\" bgcolor=\"#EE6055\" >Bloque Archivos ";
                             dot += to_string(ino.i_block[j]);

@@ -1285,7 +1285,7 @@ void comando_MKDIR(char *token){
         cout<<"P: "<<xp<<endl;
         cout<<endl;
         cMkdir(path, id, xp);
-        //TODO MKDIR
+
     }else{ //Notificando errores si no se ingresaron los parametros obligatorios al comando
         cout<<"Error: El comando \"MKDIR\" debe poseer el/los parámetros ";
 
