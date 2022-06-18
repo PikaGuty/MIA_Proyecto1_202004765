@@ -5,16 +5,16 @@
 #include "cRep.h"
 
 string rtfecha(time_t now) ;
-bool escribirDOT(string dot, char pathCe[512], char pathC[512], char extension[6]);
+void escribirDOT(string dot, char pathCe[512], char pathC[512], char extension[6]);
 
 
-void rMBR(char path[512], char nombre[16], char extension[6], char id[64]);
-void rDISK(char path[512], char nombre[16], char extension[6], char id[16]);
-void rSB(char path[512], char nombre[16], char extension[6], char id[16]);
-void rBMI(char path[512], char nombre[16], char extension[6], char id[16]);
-void rBMB(char path[512], char nombre[16], char extension[6], char id[16]);
-void rINODE(char path[512], char nombre[16], char extension[6], char id[16]);
-void rTREE(char path[512], char nombre[16], char extension[6], char id[16]);
+void rMBR(char path[512], char nombre[64], char extension[6], char id[64]);
+void rDISK(char path[512], char nombre[64], char extension[6], char id[16]);
+void rSB(char path[512], char nombre[64], char extension[6], char id[16]);
+void rBMI(char path[512], char nombre[64], char extension[6], char id[16]);
+void rBMB(char path[512], char nombre[64], char extension[6], char id[16]);
+void rINODE(char path[512], char nombre[64], char extension[6], char id[16]);
+void rTREE(char path[512], char nombre[64], char extension[6], char id[16]);
 
 void reportes(char path[512], char namee[64], char id[64]){
     string nam = namee;
@@ -74,7 +74,7 @@ void reportes(char path[512], char namee[64], char id[64]){
     }
 }
 
-void rMBR(char path[512], char nombre[16], char extension[6], char id[16]){
+void rMBR(char path[512], char nombre[64], char extension[6], char id[16]){
     char rutaEscribir[512];
     string dot = "digraph h {\n"
                  "label=<\n"
@@ -98,22 +98,22 @@ void rMBR(char path[512], char nombre[16], char extension[6], char id[16]){
            "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
     dot+= to_string(retorno.mbr_tamano);
     dot+="</TD>\n"
-           "    </TR>\n"
-           "    \n"
-           "    <TR>\n"
-           "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">Fecha de Creación</TD>\n"
-           "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+         "    </TR>\n"
+         "    \n"
+         "    <TR>\n"
+         "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">Fecha de Creación</TD>\n"
+         "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
     string fechaa= rtfecha(retorno.mbr_fecha_creacion);
     dot+= fechaa;
     dot+="</TD>\n"
-           "    </TR>\n"
-           "    \n"
-           "    <TR>\n"
-           "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Signature</TD>\n"
-           "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+         "    </TR>\n"
+         "    \n"
+         "    <TR>\n"
+         "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Signature</TD>\n"
+         "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
     dot+= to_string(retorno.mbr_dsk_signature);
     dot+="</TD>\n"
-           "    </TR>\n";
+         "    </TR>\n";
 
     partitiond particiones[4];
     particiones[0] = retorno.mbr_partition_1;
@@ -131,42 +131,42 @@ void rMBR(char path[512], char nombre[16], char extension[6], char id[16]){
                "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
         dot += particiones[i].part_status;
         dot +="</TD>\n"
-               "    </TR>\n"
-               "    \n"
-               "    <TR>\n"
-               "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Name</TD>\n"
-               "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+              "    </TR>\n"
+              "    \n"
+              "    <TR>\n"
+              "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Name</TD>\n"
+              "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
         dot += particiones[i].part_name;
         dot +="</TD>\n"
-               "    </TR>\n"
-               "    \n"
-               "    <TR>\n"
-               "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">Type</TD>\n"
-               "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+              "    </TR>\n"
+              "    \n"
+              "    <TR>\n"
+              "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">Type</TD>\n"
+              "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
         dot += particiones[i].part_type;
         dot +="</TD>\n"
-               "    </TR>\n"
-               "    \n"
-               "    <TR>\n"
-               "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Fit</TD>\n"
-               "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+              "    </TR>\n"
+              "    \n"
+              "    <TR>\n"
+              "    <TD border=\"1\"  bgcolor=\"#127ABB\"   gradientangle=\"315\">Fit</TD>\n"
+              "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
         dot +=particiones[i].part_fit;
         dot +="</TD>\n"
-               "    </TR>\n"
-               "    \n"
-               "    <TR>\n"
-               "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">Start</TD>\n"
-               "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+              "    </TR>\n"
+              "    \n"
+              "    <TR>\n"
+              "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">Start</TD>\n"
+              "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
         dot += to_string(particiones[i].part_start);
         dot +="</TD>\n"
-               "    </TR>\n"
-               "    \n"
-               "    <TR>\n"
-               "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">Size</TD>\n"
-               "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+              "    </TR>\n"
+              "    \n"
+              "    <TR>\n"
+              "    <TD border=\"1\"  bgcolor=\"#127ABB\"  gradientangle=\"315\">Size</TD>\n"
+              "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
         dot += to_string(particiones[i].part_size);
         dot +="</TD>\n"
-               "    </TR>\n";
+              "    </TR>\n";
 
 
         if(particiones[i].part_type=='E'){
@@ -209,35 +209,35 @@ void rMBR(char path[512], char nombre[16], char extension[6], char id[16]){
                                "    <TD border=\"1\"  bgcolor=\"#C89B7B\"  gradientangle=\"315\">";
                         dot+=B_ebr.part_status;
                         dot+="</TD>\n"
-                               "    </TR>\n"
-                               "    \n"
-                               "    <TR>\n"
-                               "    <TD border=\"1\"  bgcolor=\"#CC5A71\"   gradientangle=\"315\">Name</TD>\n"
-                               "    <TD border=\"1\"  bgcolor=\"#C89B7B\"  gradientangle=\"315\">";
+                             "    </TR>\n"
+                             "    \n"
+                             "    <TR>\n"
+                             "    <TD border=\"1\"  bgcolor=\"#CC5A71\"   gradientangle=\"315\">Name</TD>\n"
+                             "    <TD border=\"1\"  bgcolor=\"#C89B7B\"  gradientangle=\"315\">";
                         dot+=B_ebr.part_name;
                         dot+="</TD>\n"
-                               "    </TR>\n"
-                               "    \n"
-                               "    <TR>\n"
-                               "    <TD border=\"1\"  bgcolor=\"#CC5A71\"   gradientangle=\"315\">Fit</TD>\n"
-                               "    <TD border=\"1\"  bgcolor=\"#C89B7B\"  gradientangle=\"315\">";
+                             "    </TR>\n"
+                             "    \n"
+                             "    <TR>\n"
+                             "    <TD border=\"1\"  bgcolor=\"#CC5A71\"   gradientangle=\"315\">Fit</TD>\n"
+                             "    <TD border=\"1\"  bgcolor=\"#C89B7B\"  gradientangle=\"315\">";
                         dot+=B_ebr.part_fit;
                         dot+="</TD>\n"
-                               "    </TR>\n"
-                               "    \n"
-                               "    <TR>\n"
-                               "    <TD border=\"1\"  bgcolor=\"#CC5A71\"  gradientangle=\"315\">Start</TD>\n"
-                               "    <TD border=\"1\"  bgcolor=\"#C89B7B\"  gradientangle=\"315\">";
+                             "    </TR>\n"
+                             "    \n"
+                             "    <TR>\n"
+                             "    <TD border=\"1\"  bgcolor=\"#CC5A71\"  gradientangle=\"315\">Start</TD>\n"
+                             "    <TD border=\"1\"  bgcolor=\"#C89B7B\"  gradientangle=\"315\">";
                         dot+= to_string(B_ebr.part_start);
                         dot+="</TD>\n"
-                               "    </TR>\n"
-                               "    \n"
-                               "    <TR>\n"
-                               "    <TD border=\"1\"  bgcolor=\"#CC5A71\"  gradientangle=\"315\">Size</TD>\n"
-                               "    <TD border=\"1\"  bgcolor=\"#C89B7B\"  gradientangle=\"315\">";
+                             "    </TR>\n"
+                             "    \n"
+                             "    <TR>\n"
+                             "    <TD border=\"1\"  bgcolor=\"#CC5A71\"  gradientangle=\"315\">Size</TD>\n"
+                             "    <TD border=\"1\"  bgcolor=\"#C89B7B\"  gradientangle=\"315\">";
                         dot+= to_string(B_ebr.part_size);
                         dot+="</TD>\n"
-                               "    </TR>";
+                             "    </TR>";
 
 
                         ebr anterior;
@@ -414,7 +414,7 @@ void rMBR(char path[512], char nombre[16], char extension[6], char id[16]){
     escribirDOT(dot,rutaCe,rutaC,extension);
 }
 
-void rDISK(char path[512], char nombre[16], char extension[6], char id[16]){
+void rDISK(char path[512], char nombre[64], char extension[6], char id[16]){
     char rutaEscribir[512];
     string dot = "digraph D {\n"
                  "\n"
@@ -656,7 +656,7 @@ void rDISK(char path[512], char nombre[16], char extension[6], char id[16]){
     escribirDOT(dot,rutaCe,rutaC,extension);
 }
 
-void rSB(char path[512], char nombre[16], char extension[6], char id[16]){
+void rSB(char path[512], char nombre[64], char extension[6], char id[16]){
     superBloque sb = sb_retornar(id);
     string dot = "digraph G { \n"
                  "\n"
@@ -795,7 +795,7 @@ void rSB(char path[512], char nombre[16], char extension[6], char id[16]){
     escribirDOT(dot,rutaCe,rutaC,extension);
 }
 
-void rBMI(char path[512], char nombre[16], char extension[6], char id[16]){
+void rBMI(char path[512], char nombre[64], char extension[6], char id[16]){
     superBloque sb = sb_retornar(id);
     mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
 
@@ -846,7 +846,7 @@ void rBMI(char path[512], char nombre[16], char extension[6], char id[16]){
     escribirDOT(dot,rutaCe,rutaC,extension);
 }
 
-void rBMB(char path[512], char nombre[16], char extension[6], char id[16]){
+void rBMB(char path[512], char nombre[64], char extension[6], char id[16]){
     superBloque sb = sb_retornar(id);
     mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
 
@@ -909,7 +909,7 @@ void rBMB(char path[512], char nombre[16], char extension[6], char id[16]){
     escribirDOT(dot,rutaCe,rutaC,extension);
 }
 
-void rINODE(char path[512], char nombre[16], char extension[6], char id[16]){
+void rINODE(char path[512], char nombre[64], char extension[6], char id[16]){
     superBloque sb = sb_retornar(id);
     mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
 
@@ -980,7 +980,7 @@ void rINODE(char path[512], char nombre[16], char extension[6], char id[16]){
                        "    <TD border=\"1\"  bgcolor=\"#CC5A71\"   gradientangle=\"315\">block_";
                 dot+= to_string((j+1));
                 dot+="</TD>\n"
-                       "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
+                     "    <TD border=\"1\"  bgcolor=\"#F0D7B6\"  gradientangle=\"315\">";
                 dot += to_string(ino.i_block[j]);
                 dot += "</TD>\n"
                        "    </TR>\n\n";
@@ -1008,7 +1008,7 @@ void rINODE(char path[512], char nombre[16], char extension[6], char id[16]){
     escribirDOT(dot,rutaCe,rutaC,extension);
 }
 
-void rBLOCK(char path[512], char nombre[16], char extension[6], char id[16]){
+void rBLOCK(char path[512], char nombre[64], char extension[6], char id[16]){
     superBloque sb = sb_retornar(id);
     mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
 
@@ -1037,12 +1037,12 @@ void rBLOCK(char path[512], char nombre[16], char extension[6], char id[16]){
                                  "<tr><td border=\"2\" bgcolor=\"#EE6055\" colspan=\"2\">Bloque Carpetas ";
                             dot+= to_string(ino.i_block[j]);
                             dot += "</td></tr>\n"
-                                 "\n"
-                                 "<tr>\n"
-                                 "<td border=\"1\" bgcolor=\"#127ABB\">Name</td>\n"
-                                 "<td border=\"1\" bgcolor=\"#127ABB\">Inodo</td>\n"
-                                 "</tr>\n"
-                                 "\n";
+                                   "\n"
+                                   "<tr>\n"
+                                   "<td border=\"1\" bgcolor=\"#127ABB\">Name</td>\n"
+                                   "<td border=\"1\" bgcolor=\"#127ABB\">Inodo</td>\n"
+                                   "</tr>\n"
+                                   "\n";
                             for (int k = 0; k < 4; ++k) {
                                 dot+="<tr>\n"
                                      "<td border=\"1\" bgcolor=\"#F0D7B6\" >";
@@ -1531,7 +1531,7 @@ string generarFlechas(char id[16]){
     return dot;
 }
 
-void rTREE(char path[512], char nombre[16], char extension[6], char id[16]){
+void rTREE(char path[512], char nombre[64], char extension[6], char id[16]){
     superBloque sb = sb_retornar(id);
     mnt_nodo mountNodo = retornarNodoMount(id); //la particion que tiene los datos
 
@@ -1558,7 +1558,8 @@ void rTREE(char path[512], char nombre[16], char extension[6], char id[16]){
     escribirDOT(dot,rutaCe,rutaC,extension);
 }
 
-bool escribirDOT(string dot, char pathCe[512], char pathC[512], char extension[6]){
+void escribirDOT(string dot, char pathCe[512], char pathC[512], char extension[6]){
+
     //cout<<dot<<endl;
     string ext = extension;
     transform(ext.begin(), ext.end(), ext.begin(), ::tolower);

@@ -1,0 +1,7 @@
+digraph D {
+
+    node [fontname="Arial"];
+
+    node_A [shape=record label="    MBR\nTamaño: 125829120\nFecha de Creación:  18-06-2022 01:17:49\nSignature: 89|Name: PRI_1\nType: P\nSize: 10485760\n|Name: PRI_2\nType: P\nSize: 5242880\n|{Name: EXT\nType: E\nSize: 52428800\n|{Name: LOG_1\nTipo: L\nSize: 5242880\n|Name: LOG_2\nTipo: L\nSize: 5242880\n|Name: LOG_3\nTipo: L\nSize: 5242880\n|Name: LOG_4\nTipo: L\nSize: 5242880\n|Name: LOG_5\nTipo: L\nSize: 5242880\n|Name: LOG_6\nTipo: L\nSize: 5242880\n|Name: LOG_7\nTipo: L\nSize: 5242880\n|Name: LOG_8\nTipo: L\nSize: 5242880\n}}|Name: PRI_3\nType: P\nSize: 5242880\n"];
+
+}

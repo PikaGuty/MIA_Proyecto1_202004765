@@ -17,8 +17,8 @@ using namespace std;
 bool retornarN(char nombre[16], char ruta[512]);
 void inicializarListaMount();
 void mntPush(mnt_lista* lista, partitiond particion, ebr logica, char ruta[512]);
-partitiond devolverParticion(char ruta[512], char nombre[16]);
-ebr devolverLogica(char ruta[512], char nombre[16]);
+
+
 mnt_nodo* mntCrearNodo(partitiond particion, ebr logica, char ruta[512]);
 char letraDeDisco(mnt_lista*lista, char ruta[512]);
 char numeroDeDisco(mnt_lista*lista, char letra);
@@ -281,7 +281,7 @@ char numeroDeDisco(mnt_lista*lista, char letra) {
         if (letra == puntero->mnt_id[2])
             retorno = 0;
         //retorno= strcmp(&letra,&puntero->mnt_id[2]);//retorna 0 si son iguales
-        if (retorno == 0) {
+        if (retorno != 0) {
 
             if ((puntero->mnt_id[3]) > letraTemporal)
                 letraTemporal = puntero->mnt_id[3]; //se va buscando el mas grande
@@ -481,6 +481,7 @@ mnt_nodo retornarNodoMount(char ids[16]) {
     return re;
 }
 
+
 bool retornarN(char nombre[16], char ruta[512]) {
     mnt_lista* lista = listaDeParticiones;
     mnt_nodo* puntero = lista->cabeza;
@@ -488,7 +489,7 @@ bool retornarN(char nombre[16], char ruta[512]) {
 
     while (puntero) {
         cout<<ruta<<" "<< puntero->mnt_ruta<<endl;
-        r1 = strncmp(ruta, puntero->mnt_ruta, 512);
+        r1 = strcmp(ruta, puntero->mnt_ruta);
         //cout<<nombre<<" "<<puntero->mnt_particion.part_name<<" "<<puntero->mnt_ebr.part_name<<endl;
         if (puntero->mnt_particion.part_fit == 'B' || puntero->mnt_particion.part_fit == 'F' || puntero->mnt_particion.part_fit == 'W') {
             r2 = strcmp(nombre, puntero->mnt_particion.part_name);

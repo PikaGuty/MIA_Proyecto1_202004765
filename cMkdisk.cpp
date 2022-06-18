@@ -183,7 +183,7 @@ void execRMDISK(char ruta[512]) {
                 if (i == 0) {
                     cout<<"\t..................El disco fue eliminado................"<<endl;
                 } else {
-                    cout<<"\t................El disco no fue eliminado................"<<endl;
+                    cout<<"Error: El disco no existe"<<endl;
                 }
                 break;
             case 'n':

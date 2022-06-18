@@ -759,7 +759,7 @@ void cFdisk_eliminar(char path[512], char delet[16], char name[64]) {
     }else if (encLog == true) {
         cout << "Eliminando la Particion Lógica, Nombre: " << logic.part_name << endl;
 
-        if(particiones[i].part_status=='0') {
+        if(logic.part_status=='0') {
             if (strncmp("fast", delet, sizeof("fast")) == 0) {
                 cout << "Tipo = fast, size " << logic.part_size << endl;
 
@@ -1025,7 +1025,7 @@ prtLogica buscarLogica(char path[512], char name[64], partitiond particiones[4],
                 strcpy(nombre1, B_ebr.part_name);
                 strcpy(nombre2, name);
 
-                if (strncmp(nombre2, nombre1, 16) == 0) {
+                if (strcmp(nombre2, nombre1) == 0) {
                     rtrnLogica.B_ebr = B_ebr;
                     rtrnLogica.encontrado = true;
                     return rtrnLogica;
@@ -1074,7 +1074,7 @@ prtLogica buscarLogica(char path[512], char name[64], partitiond particiones[4],
             strcpy(nombre1, B_ebr.part_name);
             strcpy(nombre2, name);
 
-            if (strncmp(nombre2, nombre1, 16) == 0) {
+            if (strcmp(nombre2, nombre1) == 0) {
                 rtrnLogica.B_ebr = B_ebr;
                 rtrnLogica.encontrado = true;
                 return rtrnLogica;

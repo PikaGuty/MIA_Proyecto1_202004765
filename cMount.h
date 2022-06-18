@@ -22,6 +22,7 @@ void mntVER();
 void cUnmount(string id[32]);
 mnt_nodo retornarNodoMount(char ids[16]);
 void actualizarStatus(char path[512], char name[16], char status);
+partitiond devolverParticion(char ruta[512], char nombre[16]);
 
 
 #endif //MIA_PROYECTO1_202004765_CMOUNT_H
