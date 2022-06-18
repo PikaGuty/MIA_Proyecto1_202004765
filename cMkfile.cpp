@@ -128,14 +128,14 @@ void crearArchivo(char nombre[12], inodo inodoActual, int n, char ruta[512], cha
                                 char contenidoB[64];
                                 strcpy(contenidoB,"");
                                 for (int k = 0; k < 64; ++k) { //Generando numeros para llenar
-                                    strncat(contenidoB, to_string(nAct).c_str(),64);
+                                    strncat(contenidoB, to_string(nAct).c_str(),63);
                                     nAct++;
                                     if(nAct==10){
                                         nAct=0;
                                     }
                                 }
                                 bloqueArchivo blocks;
-                                strcpy(blocks.b_content,contenidoB);
+                                strncpy(blocks.b_content,contenidoB,63);
                                 blocksA_escribir(sb.s_first_blo, n, mountNodo.mnt_ruta, blocks);
 
                                 for (int j = 0; j < 15; ++j) {
@@ -153,14 +153,14 @@ void crearArchivo(char nombre[12], inodo inodoActual, int n, char ruta[512], cha
                                 char contenidoB[subSize];
                                 strcpy(contenidoB,"");
                                 for (int k = 0; k < subSize; ++k) {//Generando numeros para llenar el restante
-                                    strcat(contenidoB, to_string(nAct).c_str());
+                                    strncat(contenidoB, to_string(nAct).c_str(),63);
                                     nAct++;
                                     if(nAct==10){
                                         nAct=0;
                                     }
                                 }
                                 bloqueArchivo blocks;
-                                strcpy(blocks.b_content,contenidoB);
+                                strncpy(blocks.b_content,contenidoB,63);
                                 blocksA_escribir(sb.s_first_blo, n, mountNodo.mnt_ruta, blocks);
 
                                 for (int j = 0; j < 15; ++j) {
@@ -274,9 +274,9 @@ void crearArchivo(char nombre[12], inodo inodoActual, int n, char ruta[512], cha
 
                         int nAct=0;
                         while (subSize!=0){
-                            if(subSize>=64){
+                            if(subSize>64){
                                 bloqueArchivo blocks;
-                                strncpy(blocks.b_content,archivo.c_str(),sizeof(blocks.b_content));
+                                strncpy(blocks.b_content,archivo.c_str(),64);
                                 blocksA_escribir(sb.s_first_blo, n, mountNodo.mnt_ruta, blocks);
 
                                 for (int j = 0; j < 15; ++j) {
@@ -292,7 +292,7 @@ void crearArchivo(char nombre[12], inodo inodoActual, int n, char ruta[512], cha
                                 subSize=subSize-64;
                             }else{
                                 bloqueArchivo blocks;
-                                strncpy(blocks.b_content,archivo.c_str(),sizeof(blocks.b_content));
+                                strncpy(blocks.b_content,archivo.c_str(),64);
                                 blocksA_escribir(sb.s_first_blo, n, mountNodo.mnt_ruta, blocks);
 
                                 for (int j = 0; j < 15; ++j) {
@@ -309,7 +309,7 @@ void crearArchivo(char nombre[12], inodo inodoActual, int n, char ruta[512], cha
 
                             }
                             bloqueArchivo blocks;
-                            archivo.erase(0, sizeof(blocks.b_content));
+                            archivo.erase(0, 64);
                         }
 
                         //*****************************
