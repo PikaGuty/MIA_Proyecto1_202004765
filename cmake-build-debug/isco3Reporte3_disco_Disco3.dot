@@ -1,0 +1,7 @@
+digraph D {
+
+    node [fontname="Arial"];
+
+    node_A [shape=record label="    MBR\nTamaño: 125829120\nFecha de Creación:  18-06-2022 03:14:36\nSignature: 45|Name: PRI_1\nType: P\nSize: 10485760\n|Name: PRI_2\nType: P\nSize: 5242880\n|Name: \nType:  \nSize: 0\n|Name: PRI_3\nType: P\nSize: 5242880\n"];
+
+}
