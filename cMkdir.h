@@ -17,6 +17,9 @@ particionMontada devolverParticionMontada(char id[16]);
 void crearRoot(char id[16]);
 void verSB(superBloque sb);
 void obtenerListaBMI(char id[16], int direccionesInodos[1024]);
+datosBusquedaCarpeta buscarCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512]);
+datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512], char id[16]);
+void actualizarBMI(int posIni, int posAct, char id[16]);
 
 
 #endif //MIA_PROYECTO1_202004765_CMKDIR_H

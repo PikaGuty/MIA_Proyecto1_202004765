@@ -226,6 +226,11 @@ superBloque sb_retornar(char id[16]) {
     superBloque sb;
     mnt_nodo particion = retornarNodoMount(id);
 
+    if(strcmp(particion.mnt_ruta,"")==0){
+        sb.s_inodes_count=-1;
+        return sb;
+    }
+
     ////////los datos necesarios
     int part_inicio = 0;
     int part_tamano = 0;

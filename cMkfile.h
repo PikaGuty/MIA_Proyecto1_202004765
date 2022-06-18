@@ -5,6 +5,13 @@
 #ifndef MIA_PROYECTO1_202004765_CMKFILE_H
 #define MIA_PROYECTO1_202004765_CMKFILE_H
 
+#include "estructuras.h"
+#include "cMount.h"
+#include "cMkfs.h"
+#include <math.h>
+#include <time.h>
+#include <unistd.h>
+
 
 void cMkfile(char path[512], char id[16], bool p, int size, char cont[512]);
 

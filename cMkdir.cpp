@@ -6,14 +6,16 @@
 
 
 void fechActual(char fecha[128]);
-datosBusquedaCarpeta buscarCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512]);
-datosBusquedaCarpeta crearCarpeta(char carpeta[12], inodo inodoActual, bool p, int n, char ruta[512], char id[16]);
-void actualizarBMI(int posIni, int posAct, char id[16]);
+
 
 void cMkdir(char path[512], char id[16], bool p){
     //particionMontada m= devolverParticionMontada(id);
     superBloque sb = sb_retornar(id); //Obteniendo super bloque
     mnt_nodo mountNodo = retornarNodoMount(id); //Obteniendo nodo de la partición montada
+
+    if(strcmp(mountNodo.mnt_ruta,"") == 0||sb.s_inodes_count==-1){
+        return;
+    }
 
     string auxf = path;
     size_t pos = 0;
@@ -57,10 +59,10 @@ void cMkdir(char path[512], char id[16], bool p){
     }
 
 
-    cout<<endl;
-    cout<<endl;
+    //cout<<endl;
+    //cout<<endl;
 
-    inodos_leer(sb.s_inode_start,n,mountNodo.mnt_ruta,ino);
+    //inodos_leer(sb.s_inode_start,n,mountNodo.mnt_ruta,ino);
 
     /*cout<<"UID del usuario: "<<ino[0].i_uid<<endl;
     cout<<"GID del grupo: "<<ino[0].i_gid<<endl;
