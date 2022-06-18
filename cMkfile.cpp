@@ -276,7 +276,7 @@ void crearArchivo(char nombre[12], inodo inodoActual, int n, char ruta[512], cha
                         while (subSize!=0){
                             if(subSize>64){
                                 bloqueArchivo blocks;
-                                strncpy(blocks.b_content,archivo.c_str(),64);
+                                strncpy(blocks.b_content,archivo.c_str(),65);
                                 blocksA_escribir(sb.s_first_blo, n, mountNodo.mnt_ruta, blocks);
 
                                 for (int j = 0; j < 15; ++j) {
@@ -289,10 +289,10 @@ void crearArchivo(char nombre[12], inodo inodoActual, int n, char ruta[512], cha
                                 sb.s_free_blocks_counts--;
                                 sb.s_first_blo=sb.s_first_blo+sizeof(bloqueCarpeta)+1;
 
-                                subSize=subSize-64;
+                                subSize=subSize-65;
                             }else{
                                 bloqueArchivo blocks;
-                                strncpy(blocks.b_content,archivo.c_str(),64);
+                                strncpy(blocks.b_content,archivo.c_str(),65);
                                 blocksA_escribir(sb.s_first_blo, n, mountNodo.mnt_ruta, blocks);
 
                                 for (int j = 0; j < 15; ++j) {
@@ -309,7 +309,7 @@ void crearArchivo(char nombre[12], inodo inodoActual, int n, char ruta[512], cha
 
                             }
                             bloqueArchivo blocks;
-                            archivo.erase(0, 64);
+                            archivo.erase(0, 65);
                         }
 
                         //*****************************
