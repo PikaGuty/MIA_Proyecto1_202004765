@@ -11,6 +11,7 @@
 #include <math.h>
 #include <time.h>
 #include <unistd.h>
+#include <fstream>
 
 
 void cMkfile(char path[512], char id[16], bool p, int size, char cont[512]);
